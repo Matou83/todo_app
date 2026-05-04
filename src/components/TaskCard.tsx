@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
+import { useDraggable } from '@dnd-kit/core'
+import { CSS } from '@dnd-kit/utilities'
 import { type Task, type Column, type Status, type Priority, type Category } from '../types'
 
 interface Props {
@@ -26,6 +28,12 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
   const menuRef = useRef<HTMLDivElement>(null)
   const priority = PRIORITY_STYLE[task.priority ?? 'medium']
 
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: task.id,
+    disabled: isDragOverlay,
+  })
+  const dragStyle = transform ? { transform: CSS.Translate.toString(transform) } : undefined
+
   useEffect(() => {
     if (!showMenu) return
     function handleClick(e: MouseEvent) {
@@ -39,7 +47,11 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
 
   return (
     <div
-      className={`bg-white rounded-xl px-4 py-3.5 border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group relative cursor-grab active:cursor-grabbing animate-scale-in ${isDragOverlay ? 'shadow-xl rotate-1 opacity-90' : ''}`}
+      ref={setNodeRef}
+      style={dragStyle}
+      {...(!isDragOverlay ? listeners : {})}
+      {...(!isDragOverlay ? attributes : {})}
+      className={`bg-white rounded-xl px-4 py-3.5 border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group relative cursor-grab active:cursor-grabbing animate-scale-in ${isDragging ? 'opacity-40' : ''} ${isDragOverlay ? 'shadow-xl rotate-1 opacity-95' : ''}`}
     >
       {/* Top row: title + menu button */}
       <div className="flex items-start gap-2 justify-between">

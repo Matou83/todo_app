@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useDroppable } from '@dnd-kit/core'
 import { type Task, type Column, type Status, type Category } from '../types'
 import CategorySection from './CategorySection'
 
@@ -54,6 +55,7 @@ export default function KanbanColumn({
 }: Props) {
   const style = COLUMN_STYLE[column.id]
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const { setNodeRef, isOver } = useDroppable({ id: column.id })
 
   // Filter tasks by active category filter
   const visibleTasks = activeFilter ? tasks.filter(t => t.categoryId === activeFilter) : tasks
@@ -71,7 +73,10 @@ export default function KanbanColumn({
 
   return (
     <div className="flex flex-col w-72 shrink-0 animate-slide-up">
-      <div className={`rounded-2xl overflow-hidden flex flex-col flex-1 ${style.wrapper} shadow-sm`}>
+      <div
+          ref={setNodeRef}
+          className={`rounded-2xl overflow-hidden flex flex-col flex-1 ${style.wrapper} shadow-sm transition-all duration-150 ${isOver ? 'ring-2 ring-teal-400 ring-offset-2' : ''}`}
+        >
         {/* Accent bar */}
         <div className={`h-1 w-full ${style.accent}`} aria-hidden="true" />
 

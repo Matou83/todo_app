@@ -1,8 +1,11 @@
 import { useState } from 'react'
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
 import { type Task, type Status, type Priority, type Category, COLUMNS, DEFAULT_CATEGORIES, CATEGORY_COLOR_PALETTE } from './types'
 import KanbanColumn from './components/KanbanColumn'
 import TaskModal from './components/AddTaskModal'
 import FilterBar from './components/FilterBar'
+import TaskCard from './components/TaskCard'
 import './index.css'
 
 // ── localStorage helpers ──────────────────────────────────────────────────────
@@ -45,8 +48,15 @@ export default function App() {
   const [customCategories, setCustomCategories] = useState<Category[]>(loadCustomCategories)
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const [modal, setModal] = useState<ModalState>({ open: false })
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
 
   const categories: Category[] = [...DEFAULT_CATEGORIES, ...customCategories]
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    })
+  )
 
   // ── Tasks ──────────────────────────────────────────────────────────────────
 
@@ -93,21 +103,37 @@ export default function App() {
     if (!trimmed) return null
     const isDuplicate = categories.some(c => c.label.toLowerCase() === trimmed.toLowerCase())
     if (isDuplicate) return null
-
     const id = trimmed.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
     const colorIndex = customCategories.length % CATEGORY_COLOR_PALETTE.length
     const color = CATEGORY_COLOR_PALETTE[colorIndex]
     const newCat: Category = { id, label: trimmed, color }
-
     const updatedCustom = [...customCategories, newCat]
     setCustomCategories(updatedCustom)
     saveCustomCategories(updatedCustom)
     return newCat
   }
 
+  // ── DnD ────────────────────────────────────────────────────────────────────
+
+  function handleDragStart({ active }: DragStartEvent) {
+    setActiveTaskId(active.id as string)
+  }
+
+  function handleDragEnd({ active, over }: DragEndEvent) {
+    setActiveTaskId(null)
+    if (!over) return
+    const task = tasks.find(t => t.id === active.id)
+    const targetStatus = over.id as Status
+    if (task && task.status !== targetStatus) {
+      moveTask(task.id, targetStatus)
+    }
+  }
+
   // ── Derived ───────────────────────────────────────────────────────────────
 
   const editingTask = modal.open && modal.editId ? tasks.find(t => t.id === modal.editId) : undefined
+  const activeTask = activeTaskId ? tasks.find(t => t.id === activeTaskId) ?? null : null
+  const activeTaskCategory = activeTask ? categories.find(c => c.id === activeTask.categoryId) : undefined
   const done = tasks.filter(t => t.status === 'done').length
   const total = tasks.length
 
@@ -149,22 +175,37 @@ export default function App() {
       />
 
       {/* Board */}
-      <main className="p-6 flex gap-5 overflow-x-auto min-h-[calc(100vh-121px)] items-start">
-        {COLUMNS.map(col => (
-          <KanbanColumn
-            key={col.id}
-            column={col}
-            tasks={tasks.filter(t => t.status === col.id)}
-            categories={categories}
-            activeFilter={activeFilter}
-            onAddTask={() => setModal({ open: true, status: col.id })}
-            onMoveTask={moveTask}
-            onDeleteTask={deleteTask}
-            onEditTask={(id) => setModal({ open: true, status: tasks.find(t => t.id === id)?.status ?? col.id, editId: id })}
-            allStatuses={COLUMNS}
-          />
-        ))}
-      </main>
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <main className="p-6 flex gap-5 overflow-x-auto min-h-[calc(100vh-121px)] items-start">
+          {COLUMNS.map(col => (
+            <KanbanColumn
+              key={col.id}
+              column={col}
+              tasks={tasks.filter(t => t.status === col.id)}
+              categories={categories}
+              activeFilter={activeFilter}
+              onAddTask={() => setModal({ open: true, status: col.id })}
+              onMoveTask={moveTask}
+              onDeleteTask={deleteTask}
+              onEditTask={(id) => setModal({ open: true, status: tasks.find(t => t.id === id)?.status ?? col.id, editId: id })}
+              allStatuses={COLUMNS}
+            />
+          ))}
+        </main>
+        <DragOverlay>
+          {activeTask ? (
+            <TaskCard
+              task={activeTask}
+              category={activeTaskCategory}
+              onMove={() => {}}
+              onDelete={() => {}}
+              onEdit={() => {}}
+              allStatuses={COLUMNS}
+              isDragOverlay
+            />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       {/* Modal */}
       {modal.open && (
