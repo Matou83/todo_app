@@ -57,6 +57,7 @@ export default function CategorySection({
         <TaskCard
           key={task.id}
           task={task}
+          category={category}
           onMove={onMove}
           onDelete={onDelete}
           onEdit={onEdit}
