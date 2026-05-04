@@ -11,9 +11,9 @@ function loadTasks(): Task[] {
   try {
     const raw = JSON.parse(localStorage.getItem('kanban_tasks') || '[]')
     return raw.map((t: Task) => ({
-      priority: 'medium' as Priority,
-      categoryId: 'ops',
       ...t,
+      priority: t.priority ?? ('medium' as Priority),
+      categoryId: t.categoryId ?? 'ops',
     }))
   } catch {
     return []
