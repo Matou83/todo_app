@@ -5,7 +5,7 @@ interface Props {
   categories: Category[]
   activeFilter: string | null
   onFilterChange: (id: string | null) => void
-  onAddCategory: (label: string) => Category | null
+  onAddCategory: (label: string) => Promise<Category | null>
 }
 
 export default function FilterBar({ categories, activeFilter, onFilterChange, onAddCategory }: Props) {
@@ -13,9 +13,9 @@ export default function FilterBar({ categories, activeFilter, onFilterChange, on
   const [inputValue, setInputValue] = useState('')
   const [error, setError] = useState('')
 
-  function handleAdd() {
+  async function handleAdd() {
     if (!inputValue.trim()) return
-    const result = onAddCategory(inputValue)
+    const result = await onAddCategory(inputValue)
     if (!result) {
       setError('Cette catégorie existe déjà')
       return

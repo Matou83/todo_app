@@ -7,7 +7,7 @@ interface Props {
   categories: Category[]
   task?: Task
   onSave: (title: string, description: string, status: Status, priority: Priority, categoryId: string, editId?: string) => void
-  onAddCategory: (label: string) => Category | null
+  onAddCategory: (label: string) => Promise<Category | null>
   onClose: () => void
 }
 
@@ -46,9 +46,9 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
     onClose()
   }
 
-  function handleCreateCategory() {
+  async function handleCreateCategory() {
     if (!newCatLabel.trim()) return
-    const result = onAddCategory(newCatLabel)
+    const result = await onAddCategory(newCatLabel)
     if (!result) {
       setNewCatError('Cette catégorie existe déjà')
       return
