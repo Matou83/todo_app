@@ -1,42 +1,39 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { type Session } from '@supabase/supabase-js'
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
 import { type Task, type Status, type Priority, type Category, COLUMNS, DEFAULT_CATEGORIES, CATEGORY_COLOR_PALETTE } from './types'
+import { supabase } from './lib/supabase'
 import KanbanColumn from './components/KanbanColumn'
 import TaskModal from './components/AddTaskModal'
 import FilterBar from './components/FilterBar'
 import TaskCard from './components/TaskCard'
+import AuthForm from './components/AuthForm'
 import './index.css'
 
-// ── localStorage helpers ──────────────────────────────────────────────────────
+// ── DB row → TS type mappers ──────────────────────────────────────────────────
 
-function loadTasks(): Task[] {
-  try {
-    const raw = JSON.parse(localStorage.getItem('kanban_tasks') || '[]')
-    return raw.map((t: Task) => ({
-      ...t,
-      priority: t.priority ?? ('medium' as Priority),
-      categoryId: t.categoryId ?? 'ops',
-    }))
-  } catch {
-    return []
+type TaskRow = {
+  id: string; title: string; description: string | null
+  status: string; priority: string; category_id: string; created_at: string
+}
+
+type CategoryRow = { id: string; label: string; color: string }
+
+function mapTask(row: TaskRow): Task {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description ?? undefined,
+    status: row.status as Status,
+    priority: row.priority as Priority,
+    categoryId: row.category_id,
+    createdAt: new Date(row.created_at).getTime(),
   }
 }
 
-function saveTasks(tasks: Task[]) {
-  localStorage.setItem('kanban_tasks', JSON.stringify(tasks))
-}
-
-function loadCustomCategories(): Category[] {
-  try {
-    return JSON.parse(localStorage.getItem('kanban_categories') || '[]')
-  } catch {
-    return []
-  }
-}
-
-function saveCustomCategories(custom: Category[]) {
-  localStorage.setItem('kanban_categories', JSON.stringify(custom))
+function mapCategory(row: CategoryRow): Category {
+  return { id: row.id, label: row.label, color: row.color }
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -44,8 +41,10 @@ function saveCustomCategories(custom: Category[]) {
 type ModalState = { open: false } | { open: true; status: Status; editId?: string }
 
 export default function App() {
-  const [tasks, setTasks] = useState<Task[]>(loadTasks)
-  const [customCategories, setCustomCategories] = useState<Category[]>(loadCustomCategories)
+  const [session, setSession] = useState<Session | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [customCategories, setCustomCategories] = useState<Category[]>([])
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const [modal, setModal] = useState<ModalState>({ open: false })
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
@@ -53,19 +52,47 @@ export default function App() {
   const categories: Category[] = [...DEFAULT_CATEGORIES, ...customCategories]
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   )
+
+  // ── Auth + fetch initial ──────────────────────────────────────────────────
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      if (session) fetchData()
+      else setLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        setSession(session)
+        fetchData()
+      }
+      if (event === 'SIGNED_OUT') {
+        setSession(null)
+        setTasks([])
+        setCustomCategories([])
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function fetchData() {
+    setLoading(true)
+    const [{ data: tasksData }, { data: catsData }] = await Promise.all([
+      supabase.from('tasks').select('*').order('created_at', { ascending: true }),
+      supabase.from('categories').select('*').order('created_at', { ascending: true }),
+    ])
+    setTasks((tasksData ?? []).map(r => mapTask(r as TaskRow)))
+    setCustomCategories((catsData ?? []).map(r => mapCategory(r as CategoryRow)))
+    setLoading(false)
+  }
 
   // ── Tasks ──────────────────────────────────────────────────────────────────
 
-  function updateTasks(next: Task[]) {
-    setTasks(next)
-    saveTasks(next)
-  }
-
-  function saveTask(
+  async function saveTask(
     title: string,
     description: string,
     status: Status,
@@ -74,31 +101,32 @@ export default function App() {
     editId?: string,
   ) {
     if (editId) {
-      updateTasks(tasks.map(t => t.id === editId ? { ...t, title, description, status, priority, categoryId } : t))
+      const { error } = await supabase.from('tasks').update({
+        title, description, status, priority, category_id: categoryId,
+      }).eq('id', editId)
+      if (!error) setTasks(prev => prev.map(t => t.id === editId ? { ...t, title, description, status, priority, categoryId } : t))
     } else {
-      updateTasks([...tasks, {
-        id: crypto.randomUUID(),
-        title,
-        description,
-        status,
-        priority,
-        categoryId,
-        createdAt: Date.now(),
-      }])
+      const { data, error } = await supabase.from('tasks').insert({
+        title, description, status, priority, category_id: categoryId,
+        user_id: session!.user.id,
+      }).select().single()
+      if (!error && data) setTasks(prev => [...prev, mapTask(data as TaskRow)])
     }
   }
 
-  function moveTask(id: string, status: Status) {
-    updateTasks(tasks.map(t => t.id === id ? { ...t, status } : t))
+  async function moveTask(id: string, status: Status) {
+    const { error } = await supabase.from('tasks').update({ status }).eq('id', id)
+    if (!error) setTasks(prev => prev.map(t => t.id === id ? { ...t, status } : t))
   }
 
-  function deleteTask(id: string) {
-    updateTasks(tasks.filter(t => t.id !== id))
+  async function deleteTask(id: string) {
+    const { error } = await supabase.from('tasks').delete().eq('id', id)
+    if (!error) setTasks(prev => prev.filter(t => t.id !== id))
   }
 
   // ── Categories ─────────────────────────────────────────────────────────────
 
-  function addCategory(label: string): Category | null {
+  async function addCategory(label: string): Promise<Category | null> {
     const trimmed = label.trim()
     if (!trimmed) return null
     const isDuplicate = categories.some(c => c.label.toLowerCase() === trimmed.toLowerCase())
@@ -106,10 +134,12 @@ export default function App() {
     const id = trimmed.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
     const colorIndex = customCategories.length % CATEGORY_COLOR_PALETTE.length
     const color = CATEGORY_COLOR_PALETTE[colorIndex]
+    const { error } = await supabase.from('categories').insert({
+      id, label: trimmed, color, user_id: session!.user.id,
+    })
+    if (error) return null
     const newCat: Category = { id, label: trimmed, color }
-    const updatedCustom = [...customCategories, newCat]
-    setCustomCategories(updatedCustom)
-    saveCustomCategories(updatedCustom)
+    setCustomCategories(prev => [...prev, newCat])
     return newCat
   }
 
@@ -137,6 +167,20 @@ export default function App() {
   const done = tasks.filter(t => t.status === 'done').length
   const total = tasks.length
 
+  // ── Loading / Auth gate ───────────────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F0FDFA] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-teal-400 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!session) {
+    return <AuthForm onAuth={() => {}} />
+  }
+
   return (
     <div className="min-h-screen bg-[#F0FDFA] font-sans">
       {/* Header */}
@@ -154,16 +198,24 @@ export default function App() {
             )}
           </div>
         </div>
-        <button
-          onClick={() => setModal({ open: true, status: 'todo' })}
-          className="flex items-center gap-2 bg-[#F97316] text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-orange-500 active:scale-95 transition-all duration-150 shadow-sm cursor-pointer"
-          aria-label="Créer une nouvelle tâche"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Nouvelle tâche
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setModal({ open: true, status: 'todo' })}
+            className="flex items-center gap-2 bg-[#F97316] text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-orange-500 active:scale-95 transition-all duration-150 shadow-sm cursor-pointer"
+            aria-label="Créer une nouvelle tâche"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Nouvelle tâche
+          </button>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="text-sm font-medium text-slate-500 hover:text-slate-700 px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+          >
+            Déconnexion
+          </button>
+        </div>
       </header>
 
       {/* FilterBar */}
