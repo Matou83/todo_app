@@ -31,13 +31,13 @@ export default function FilterBar({ categories, activeFilter, onFilterChange, on
   }
 
   return (
-    <div className="bg-white border-b border-slate-100 px-6 py-2.5 flex items-center gap-2 flex-wrap sticky top-[73px] z-10">
+    <div className="bg-white border-b border-slate-100 px-4 sm:px-6 py-2.5 flex items-center gap-2 overflow-x-auto flex-nowrap sm:flex-wrap sticky top-[73px] z-10 scrollbar-none">
       <span className="text-xs font-semibold text-slate-400 mr-1 shrink-0">FILTRE</span>
 
       {/* "Toutes" chip */}
       <button
         onClick={() => onFilterChange(null)}
-        className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors duration-150 cursor-pointer ${
+        className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors duration-150 cursor-pointer shrink-0 ${
           activeFilter === null
             ? 'bg-[#134E4A] text-white'
             : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
@@ -51,7 +51,7 @@ export default function FilterBar({ categories, activeFilter, onFilterChange, on
         <button
           key={cat.id}
           onClick={() => onFilterChange(activeFilter === cat.id ? null : cat.id)}
-          className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-150 cursor-pointer ${
+          className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-150 cursor-pointer shrink-0 ${
             activeFilter === cat.id ? 'text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
           }`}
           style={activeFilter === cat.id ? { backgroundColor: cat.color } : {}}
@@ -89,7 +89,7 @@ export default function FilterBar({ categories, activeFilter, onFilterChange, on
       ) : (
         <button
           onClick={() => setShowInput(true)}
-          className="rounded-full px-3 py-1 text-xs font-semibold text-slate-400 border border-dashed border-slate-300 hover:border-teal-400 hover:text-teal-600 transition-colors duration-150 cursor-pointer"
+          className="rounded-full px-3 py-1 text-xs font-semibold text-slate-400 border border-dashed border-slate-300 hover:border-teal-400 hover:text-teal-600 transition-colors duration-150 cursor-pointer shrink-0"
         >
           + Catégorie
         </button>
