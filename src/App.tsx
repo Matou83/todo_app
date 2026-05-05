@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useIsMobile } from './hooks/useIsMobile'
 import { type Session } from '@supabase/supabase-js'
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
@@ -48,12 +49,13 @@ export default function App() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const [modal, setModal] = useState<ModalState>({ open: false })
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
+  const isMobile = useIsMobile()
+  const [activeTab, setActiveTab] = useState<Status>('todo')
 
   const categories: Category[] = [...DEFAULT_CATEGORIES, ...customCategories]
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
-  )
+  const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  const sensors = useSensors(...(isMobile ? [] : [pointerSensor]))
 
   // ── Auth + fetch initial ──────────────────────────────────────────────────
 
@@ -200,14 +202,14 @@ export default function App() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setModal({ open: true, status: 'todo' })}
-            className="flex items-center gap-2 bg-[#F97316] text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-orange-500 active:scale-95 transition-all duration-150 shadow-sm cursor-pointer"
+            onClick={() => setModal({ open: true, status: isMobile ? activeTab : 'todo' })}
+            className="flex items-center gap-2 bg-[#F97316] text-white text-sm font-semibold px-3 sm:px-4 py-2.5 rounded-xl hover:bg-orange-500 active:scale-95 transition-all duration-150 shadow-sm cursor-pointer"
             aria-label="Créer une nouvelle tâche"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            Nouvelle tâche
+            <span className="hidden sm:inline">Nouvelle tâche</span>
           </button>
           <button
             onClick={() => supabase.auth.signOut()}
@@ -227,37 +229,83 @@ export default function App() {
       />
 
       {/* Board */}
-      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <main className="p-6 flex gap-5 overflow-x-auto min-h-[calc(100vh-121px)] items-start">
-          {COLUMNS.map(col => (
+      {isMobile ? (
+        <>
+          {/* Tab bar */}
+          <div className="bg-white border-b border-slate-200 flex sticky top-[113px] z-10">
+            {COLUMNS.map(col => {
+              const count = tasks.filter(t => t.status === col.id).length
+              const isActive = activeTab === col.id
+              const activeStyle =
+                col.id === 'todo' ? 'text-slate-700 border-slate-700' :
+                col.id === 'in_progress' ? 'text-teal-700 border-teal-600' :
+                'text-orange-600 border-orange-500'
+              const activeBadge =
+                col.id === 'todo' ? 'bg-slate-100 text-slate-600' :
+                col.id === 'in_progress' ? 'bg-teal-100 text-teal-700' :
+                'bg-orange-100 text-orange-600'
+              return (
+                <button
+                  key={col.id}
+                  onClick={() => setActiveTab(col.id)}
+                  className={`flex-1 flex flex-col items-center gap-1 py-2.5 text-xs font-bold border-b-2 transition-colors cursor-pointer ${isActive ? activeStyle : 'text-slate-400 border-transparent'}`}
+                >
+                  {col.label}
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${isActive ? activeBadge : 'bg-slate-100 text-slate-400'}`}>
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          {/* Active column */}
+          <main className="p-4">
             <KanbanColumn
-              key={col.id}
-              column={col}
-              tasks={tasks.filter(t => t.status === col.id)}
+              column={COLUMNS.find(c => c.id === activeTab)!}
+              tasks={tasks.filter(t => t.status === activeTab)}
               categories={categories}
               activeFilter={activeFilter}
-              onAddTask={() => setModal({ open: true, status: col.id })}
+              onAddTask={() => setModal({ open: true, status: activeTab })}
               onMoveTask={moveTask}
               onDeleteTask={deleteTask}
-              onEditTask={(id) => setModal({ open: true, status: tasks.find(t => t.id === id)?.status ?? col.id, editId: id })}
+              onEditTask={(id) => setModal({ open: true, status: tasks.find(t => t.id === id)?.status ?? activeTab, editId: id })}
               allStatuses={COLUMNS}
             />
-          ))}
-        </main>
-        <DragOverlay>
-          {activeTask ? (
-            <TaskCard
-              task={activeTask}
-              category={activeTaskCategory}
-              onMove={() => {}}
-              onDelete={() => {}}
-              onEdit={() => {}}
-              allStatuses={COLUMNS}
-              isDragOverlay
-            />
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+          </main>
+        </>
+      ) : (
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <main className="p-6 flex gap-5 overflow-x-auto min-h-[calc(100vh-121px)] items-start">
+            {COLUMNS.map(col => (
+              <KanbanColumn
+                key={col.id}
+                column={col}
+                tasks={tasks.filter(t => t.status === col.id)}
+                categories={categories}
+                activeFilter={activeFilter}
+                onAddTask={() => setModal({ open: true, status: col.id })}
+                onMoveTask={moveTask}
+                onDeleteTask={deleteTask}
+                onEditTask={(id) => setModal({ open: true, status: tasks.find(t => t.id === id)?.status ?? col.id, editId: id })}
+                allStatuses={COLUMNS}
+              />
+            ))}
+          </main>
+          <DragOverlay>
+            {activeTask ? (
+              <TaskCard
+                task={activeTask}
+                category={activeTaskCategory}
+                onMove={() => {}}
+                onDelete={() => {}}
+                onEdit={() => {}}
+                allStatuses={COLUMNS}
+                isDragOverlay
+              />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      )}
 
       {/* Modal */}
       {modal.open && (
