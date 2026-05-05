@@ -67,8 +67,18 @@ export default function KanbanColumn({
 
   const isEmpty = visibleTasks.length === 0
 
+  const allCollapsed = groups.length > 0 && groups.every(g => collapsed[g.category.id])
+
   function toggleCollapse(categoryId: string) {
     setCollapsed(prev => ({ ...prev, [categoryId]: !prev[categoryId] }))
+  }
+
+  function toggleAll() {
+    if (allCollapsed) {
+      setCollapsed({})
+    } else {
+      setCollapsed(Object.fromEntries(groups.map(g => [g.category.id, true])))
+    }
   }
 
   return (
@@ -86,9 +96,23 @@ export default function KanbanColumn({
             <span className={`w-2 h-2 rounded-full ${style.dot} shrink-0`} aria-hidden="true" />
             <span className={`font-semibold text-sm ${style.label}`}>{column.label}</span>
           </div>
-          <span className={`text-xs font-semibold rounded-full px-2 py-0.5 ${style.count}`}>
-            {visibleTasks.length}
-          </span>
+          <div className="flex items-center gap-2">
+            {groups.length > 1 && (
+              <button
+                onClick={toggleAll}
+                className="text-xs text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                title={allCollapsed ? 'Tout déplier' : 'Tout replier'}
+                aria-label={allCollapsed ? 'Tout déplier' : 'Tout replier'}
+              >
+                <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${allCollapsed ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                </svg>
+              </button>
+            )}
+            <span className={`text-xs font-semibold rounded-full px-2 py-0.5 ${style.count}`}>
+              {visibleTasks.length}
+            </span>
+          </div>
         </div>
 
         {/* Task groups */}
