@@ -60,7 +60,7 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
           <div ref={menuRef} className="relative shrink-0">
             <button
               onClick={() => setShowMenu(v => !v)}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-150 cursor-pointer"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100 transition-all duration-150 cursor-pointer"
               aria-label="Options de la tâche"
               aria-expanded={showMenu}
             >
