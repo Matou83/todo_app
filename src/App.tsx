@@ -101,19 +101,22 @@ export default function App() {
     priority: Priority,
     categoryId: string,
     editId?: string,
-  ) {
+  ): Promise<boolean> {
     if (editId) {
       const { error } = await supabase.from('tasks').update({
         title, description, status, priority, category_id: categoryId,
       }).eq('id', editId)
-      if (!error) setTasks(prev => prev.map(t => t.id === editId ? { ...t, title, description, status, priority, categoryId } : t))
+      if (error) { console.error('saveTask update error:', error); return false }
+      setTasks(prev => prev.map(t => t.id === editId ? { ...t, title, description, status, priority, categoryId } : t))
     } else {
       const { data, error } = await supabase.from('tasks').insert({
         title, description, status, priority, category_id: categoryId,
         user_id: session!.user.id,
       }).select().single()
-      if (!error && data) setTasks(prev => [...prev, mapTask(data as TaskRow)])
+      if (error) { console.error('saveTask insert error:', error); return false }
+      if (data) setTasks(prev => [...prev, mapTask(data as TaskRow)])
     }
+    return true
   }
 
   async function moveTask(id: string, status: Status) {

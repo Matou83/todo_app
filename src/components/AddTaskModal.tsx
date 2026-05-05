@@ -6,7 +6,7 @@ interface Props {
   columns: Column[]
   categories: Category[]
   task?: Task
-  onSave: (title: string, description: string, status: Status, priority: Priority, categoryId: string, editId?: string) => void
+  onSave: (title: string, description: string, status: Status, priority: Priority, categoryId: string, editId?: string) => Promise<boolean>
   onAddCategory: (label: string) => Promise<Category | null>
   onClose: () => void
 }
@@ -27,6 +27,8 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
   const [showNewCat, setShowNewCat] = useState(false)
   const [newCatLabel, setNewCatLabel] = useState('')
   const [newCatError, setNewCatError] = useState('')
+  const [saveError, setSaveError] = useState('')
+  const [saving, setSaving] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { inputRef.current?.focus() }, [])
@@ -39,11 +41,15 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onClose])
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim()) return
-    onSave(title.trim(), description.trim(), status, priority, categoryId, task?.id)
-    onClose()
+    setSaving(true)
+    setSaveError('')
+    const ok = await onSave(title.trim(), description.trim(), status, priority, categoryId, task?.id)
+    setSaving(false)
+    if (ok) onClose()
+    else setSaveError('Erreur lors de la sauvegarde. Réessayez.')
   }
 
   async function handleCreateCategory() {
@@ -210,6 +216,9 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
           </div>
 
           {/* Actions */}
+          {saveError && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{saveError}</p>
+          )}
           <div className="flex gap-2 justify-end pt-1">
             <button
               type="button"
@@ -220,9 +229,10 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 text-sm font-semibold bg-[#0D9488] text-white rounded-xl hover:bg-teal-700 active:scale-95 transition-all duration-150 shadow-sm cursor-pointer"
+              disabled={saving}
+              className="px-5 py-2.5 text-sm font-semibold bg-[#0D9488] text-white rounded-xl hover:bg-teal-700 active:scale-95 transition-all duration-150 shadow-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {isEdit ? 'Enregistrer' : 'Ajouter'}
+              {saving ? 'Sauvegarde…' : isEdit ? 'Enregistrer' : 'Ajouter'}
             </button>
           </div>
         </form>
