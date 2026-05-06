@@ -110,13 +110,23 @@ export default function App() {
   }
 
   useEffect(() => {
-    function handler(e: Event) {
-      e.preventDefault()
-      installPromptRef.current = e as BeforeInstallPromptEvent
+    // Check if event was already captured before React mounted
+    const early = (window as unknown as Record<string, unknown>).__installPrompt
+    if (early) {
+      installPromptRef.current = early as BeforeInstallPromptEvent
       setCanInstall(true)
+      return
     }
-    window.addEventListener('beforeinstallprompt', handler)
-    return () => window.removeEventListener('beforeinstallprompt', handler)
+    // Otherwise listen for it
+    function onReady() {
+      const prompt = (window as unknown as Record<string, unknown>).__installPrompt
+      if (prompt) {
+        installPromptRef.current = prompt as BeforeInstallPromptEvent
+        setCanInstall(true)
+      }
+    }
+    window.addEventListener('installpromptready', onReady)
+    return () => window.removeEventListener('installpromptready', onReady)
   }, [])
 
   async function handleInstall() {
