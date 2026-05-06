@@ -50,7 +50,7 @@
   background-size: 10px 10px; background-repeat: no-repeat; background-position: center;
 }
 .tiptap-editor li[data-type="taskItem"] > div { flex: 1; }
-.tiptap-editor li[data-type="taskItem"][data-checked="true"] > div p { text-decoration: line-through; color: #94a3b8; }
+.tiptap-editor li[data-checked="true"] > div p { text-decoration: line-through; color: #94a3b8; }
 
 /* Bullet list */
 .tiptap-editor ul:not([data-type="taskList"]) { list-style: none; padding: 0; margin: 2px 0; display: flex; flex-direction: column; gap: 4px; }

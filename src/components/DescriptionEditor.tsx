@@ -4,6 +4,16 @@ import StarterKit from '@tiptap/starter-kit'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 
+function refreshCheckedStyles(dom: Element) {
+  dom.querySelectorAll('li[data-checked]').forEach(li => {
+    const div = li.querySelector(':scope > div') as HTMLElement | null
+    if (!div) return
+    const checked = (li as HTMLElement).dataset.checked === 'true'
+    div.style.textDecoration = checked ? 'line-through' : ''
+    div.style.color = checked ? '#94a3b8' : ''
+  })
+}
+
 interface Props {
   value: string
   onChange: (html: string) => void
@@ -16,11 +26,11 @@ export default function DescriptionEditor({ value, onChange, placeholder = 'Desc
       StarterKit.configure({ heading: false, blockquote: false, codeBlock: false, code: false, horizontalRule: false }),
       TaskList,
       TaskItem.configure({
-      nested: false,
-      HTMLAttributes: {
-        style: 'display:flex;flex-direction:row;align-items:flex-start;gap:8px;',
-      },
-    }),
+        nested: false,
+        HTMLAttributes: {
+          style: 'display:flex;flex-direction:row;align-items:flex-start;gap:8px;',
+        },
+      }),
     ],
     content: value || '',
     onUpdate({ editor }) {
@@ -34,12 +44,38 @@ export default function DescriptionEditor({ value, onChange, placeholder = 'Desc
     },
   })
 
-  // Sync value when modal re-opens with a different task
+  // Apply strikethrough on checked task items
+  useEffect(() => {
+    if (!editor) return
+    const dom = editor.view.dom
+
+    // Initial pass for pre-checked items
+    refreshCheckedStyles(dom)
+
+    // Listen to checkbox changes directly — use input.checked (not data-checked)
+    // to avoid any timing dependency on when Tiptap updates the attribute
+    function handleChange(e: Event) {
+      const input = e.target as HTMLInputElement
+      if (input.type !== 'checkbox') return
+      const li = input.closest('li') as HTMLElement | null
+      if (!li) return
+      const div = li.querySelector(':scope > div') as HTMLElement | null
+      if (!div) return
+      div.style.textDecoration = input.checked ? 'line-through' : ''
+      div.style.color = input.checked ? '#94a3b8' : ''
+    }
+
+    dom.addEventListener('change', handleChange)
+    return () => dom.removeEventListener('change', handleChange)
+  }, [editor])
+
+  // Sync value when modal re-opens with a different task, then re-apply styles
   useEffect(() => {
     if (!editor) return
     const current = editor.isEmpty ? '' : editor.getHTML()
     if (current !== value) {
       editor.commands.setContent(value || '')
+      requestAnimationFrame(() => refreshCheckedStyles(editor.view.dom))
     }
   }, [value]) // eslint-disable-line react-hooks/exhaustive-deps
 
