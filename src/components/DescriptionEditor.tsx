@@ -15,7 +15,12 @@ export default function DescriptionEditor({ value, onChange, placeholder = 'Desc
     extensions: [
       StarterKit.configure({ heading: false, blockquote: false, codeBlock: false, code: false, horizontalRule: false }),
       TaskList,
-      TaskItem.configure({ nested: false }),
+      TaskItem.configure({
+      nested: false,
+      HTMLAttributes: {
+        style: 'display:flex;flex-direction:row;align-items:center;gap:8px;',
+      },
+    }),
     ],
     content: value || '',
     onUpdate({ editor }) {
