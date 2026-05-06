@@ -28,6 +28,7 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
   const [showMenu, setShowMenu] = useState(false)
   const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; right: number } | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const menuWrapperRef = useRef<HTMLDivElement>(null)
   const menuBtnRef = useRef<HTMLButtonElement>(null)
   const priority = PRIORITY_STYLE[task.priority ?? 'medium']
 
@@ -45,9 +46,9 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
   useEffect(() => {
     if (!showMenu) return
     function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowMenu(false)
-      }
+      const inMenu = menuRef.current?.contains(e.target as Node)
+      const inWrapper = menuWrapperRef.current?.contains(e.target as Node)
+      if (!inMenu && !inWrapper) setShowMenu(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -72,7 +73,7 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
       <div className="flex items-start gap-2 justify-between">
         <p className="text-sm font-semibold text-[#134E4A] leading-snug flex-1 pr-1">{task.title}</p>
         {!isDragOverlay && (
-          <div ref={menuRef} className="relative shrink-0">
+          <div ref={menuWrapperRef} className="relative shrink-0">
             <button
               ref={menuBtnRef}
               onClick={e => {
