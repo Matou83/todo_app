@@ -18,7 +18,7 @@ import './index.css'
 type TaskRow = {
   id: string; title: string; description: string | null
   status: string; priority: string; category_id: string; created_at: string
-  due_date: string | null
+  due_date: string | null; completed_at: string | null
 }
 
 type CategoryRow = { id: string; label: string; color: string }
@@ -33,6 +33,7 @@ function mapTask(row: TaskRow): Task {
     categoryId: row.category_id,
     createdAt: new Date(row.created_at).getTime(),
     dueDate: row.due_date ? new Date(row.due_date).getTime() : undefined,
+    completedAt: row.completed_at ? new Date(row.completed_at).getTime() : undefined,
   }
 }
 
@@ -69,9 +70,11 @@ export default function App() {
   const envCategories = categories.filter(c =>
     env === 'perso' ? PERSO_CATEGORY_IDS.has(c.id) : !PERSO_CATEGORY_IDS.has(c.id)
   )
+  const ARCHIVE_THRESHOLD = 15 * 24 * 60 * 60 * 1000
   const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 }
   const envTasks = tasks
     .filter(t => envCategories.some(c => c.id === t.categoryId))
+    .filter(t => !(t.status === 'done' && t.completedAt != null && Date.now() - t.completedAt > ARCHIVE_THRESHOLD))
     .sort((a, b) => {
       const aHas = a.dueDate != null
       const bHas = b.dueDate != null
@@ -144,15 +147,23 @@ export default function App() {
   ): Promise<boolean> {
     const due_date = dueDate ? new Date(dueDate).toISOString() : null
     if (editId) {
+      const prevTask = tasks.find(t => t.id === editId)
+      const becomingDone = status === 'done' && prevTask?.status !== 'done'
+      const leavingDone = status !== 'done' && prevTask?.status === 'done'
+      const completed_at = becomingDone
+        ? new Date().toISOString()
+        : leavingDone ? null : prevTask?.completedAt ? new Date(prevTask.completedAt).toISOString() : null
       const { error } = await supabase.from('tasks').update({
-        title, description, status, priority, category_id: categoryId, due_date,
+        title, description, status, priority, category_id: categoryId, due_date, completed_at,
       }).eq('id', editId)
       if (error) { console.error('saveTask update error:', error); return false }
-      setTasks(prev => prev.map(t => t.id === editId ? { ...t, title, description, status, priority, categoryId, dueDate } : t))
+      const completedAt = completed_at ? new Date(completed_at).getTime() : undefined
+      setTasks(prev => prev.map(t => t.id === editId ? { ...t, title, description, status, priority, categoryId, dueDate, completedAt } : t))
     } else {
+      const completed_at = status === 'done' ? new Date().toISOString() : null
       const { data, error } = await supabase.from('tasks').insert({
         title, description, status, priority, category_id: categoryId,
-        due_date, user_id: session!.user.id,
+        due_date, completed_at, user_id: session!.user.id,
       }).select().single()
       if (error) { console.error('saveTask insert error:', error); return false }
       if (data) setTasks(prev => [...prev, mapTask(data as TaskRow)])
@@ -161,8 +172,11 @@ export default function App() {
   }
 
   async function moveTask(id: string, status: Status) {
-    const { error } = await supabase.from('tasks').update({ status }).eq('id', id)
-    if (!error) setTasks(prev => prev.map(t => t.id === id ? { ...t, status } : t))
+    const completed_at = status === 'done' ? new Date().toISOString() : null
+    const { error } = await supabase.from('tasks').update({ status, completed_at }).eq('id', id)
+    if (!error) setTasks(prev => prev.map(t => t.id === id
+      ? { ...t, status, completedAt: completed_at ? new Date(completed_at).getTime() : undefined }
+      : t))
   }
 
   async function updateTaskDescription(id: string, description: string) {

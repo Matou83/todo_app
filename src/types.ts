@@ -16,6 +16,7 @@ export interface Task {
   categoryId: string
   createdAt: number
   dueDate?: number
+  completedAt?: number
 }
 
 export interface Column {
