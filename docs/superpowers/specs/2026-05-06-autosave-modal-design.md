@@ -11,7 +11,7 @@ In edit mode, the task modal saves automatically when closed (X, Escape, click o
 - On open: capture a snapshot of the task's initial state (title, description, status, priority, categoryId, dueDate).
 - On close via **X / Escape / click outside**: compare current state with snapshot. If different, call `saveTask` silently before closing. If unchanged, close immediately.
 - On **"Annuler"**: close immediately without saving. The task keeps its previous state.
-- **"Enregistrer"** button is removed in edit mode.
+- **"Enregistrer"** and **"Fermer"** buttons are removed in edit mode. Only "Annuler" remains.
 
 ### Create mode
 
