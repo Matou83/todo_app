@@ -22,9 +22,6 @@ const PRIORITY_STYLE: Record<Priority, { dot: string; text: string; bg: string; 
   low:    { dot: 'bg-teal-500',  text: 'text-teal-600',  bg: 'bg-teal-50',  label: 'Basse' },
 }
 
-function formatDate(ts: number): string {
-  return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(ts))
-}
 
 function getDueDateBadge(dueDate: number): { label: string; className: string } {
   const now = new Date()
