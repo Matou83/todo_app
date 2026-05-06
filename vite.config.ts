@@ -11,6 +11,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon-180x180.png'],
+      workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+      },
       manifest: {
         name: 'Kanban Board',
         short_name: 'Kanban',
