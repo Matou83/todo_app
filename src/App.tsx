@@ -40,6 +40,14 @@ function mapCategory(row: CategoryRow): Category {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 type ModalState = { open: false } | { open: true; status: Status; editId?: string }
+type Env = 'pro' | 'perso'
+
+const PERSO_CATEGORY_IDS = new Set(['perso'])
+
+const ENV_CONFIG: Record<Env, { label: string; icon: string; bg: string; text: string; subtext: string }> = {
+  pro:   { label: 'Pro',   icon: '💼', bg: 'bg-[#134E4A]', text: 'text-teal-100',  subtext: 'text-teal-300' },
+  perso: { label: 'Perso', icon: '🏠', bg: 'bg-[#EA580C]', text: 'text-orange-50', subtext: 'text-orange-200' },
+}
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -49,10 +57,21 @@ export default function App() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const [modal, setModal] = useState<ModalState>({ open: false })
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
+  const [env, setEnv] = useState<Env>('pro')
   const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState<Status>('todo')
 
   const categories: Category[] = [...DEFAULT_CATEGORIES, ...customCategories]
+
+  const envCategories = categories.filter(c =>
+    env === 'perso' ? PERSO_CATEGORY_IDS.has(c.id) : !PERSO_CATEGORY_IDS.has(c.id)
+  )
+  const envTasks = tasks.filter(t => envCategories.some(c => c.id === t.categoryId))
+
+  function switchEnv(next: Env) {
+    setEnv(next)
+    setActiveFilter(null)
+  }
 
   const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   const sensors = useSensors(...(isMobile ? [] : [pointerSensor]))
@@ -169,8 +188,9 @@ export default function App() {
   const editingTask = modal.open && modal.editId ? tasks.find(t => t.id === modal.editId) : undefined
   const activeTask = activeTaskId ? tasks.find(t => t.id === activeTaskId) ?? null : null
   const activeTaskCategory = activeTask ? categories.find(c => c.id === activeTask.categoryId) : undefined
-  const done = tasks.filter(t => t.status === 'done').length
-  const total = tasks.length
+  const done = envTasks.filter(t => t.status === 'done').length
+  const total = envTasks.length
+  const envConf = ENV_CONFIG[env]
 
   // ── Loading / Auth gate ───────────────────────────────────────────────────
 
@@ -204,6 +224,26 @@ export default function App() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* Env pill switcher */}
+          <div className="flex bg-slate-100 rounded-xl p-1 gap-1" role="group" aria-label="Environnement">
+            {(['pro', 'perso'] as Env[]).map(e => (
+              <button
+                key={e}
+                onClick={() => switchEnv(e)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer ${
+                  env === e
+                    ? e === 'pro'
+                      ? 'bg-[#134E4A] text-white shadow-sm'
+                      : 'bg-[#EA580C] text-white shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+                aria-pressed={env === e}
+              >
+                <span aria-hidden="true">{ENV_CONFIG[e].icon}</span>
+                <span className="hidden sm:inline">{ENV_CONFIG[e].label}</span>
+              </button>
+            ))}
+          </div>
           <button
             onClick={() => setModal({ open: true, status: isMobile ? activeTab : 'todo' })}
             className="flex items-center gap-2 bg-[#F97316] text-white text-sm font-semibold px-3 sm:px-4 py-2.5 rounded-xl hover:bg-orange-500 active:scale-95 transition-all duration-150 shadow-sm cursor-pointer"
@@ -223,9 +263,18 @@ export default function App() {
         </div>
       </header>
 
+      {/* Env banner */}
+      <div className={`${envConf.bg} px-6 py-2 flex items-center gap-2`} role="status" aria-live="polite">
+        <span className="text-base leading-none" aria-hidden="true">{envConf.icon}</span>
+        <span className={`text-xs font-bold ${envConf.text}`}>Environnement {envConf.label}</span>
+        {total > 0 && (
+          <span className={`text-xs ${envConf.subtext} ml-auto`}>{done}/{total} terminées</span>
+        )}
+      </div>
+
       {/* FilterBar */}
       <FilterBar
-        categories={categories}
+        categories={envCategories}
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
         onAddCategory={addCategory}
@@ -237,7 +286,7 @@ export default function App() {
           {/* Tab bar */}
           <div className="bg-white border-b border-slate-200 flex sticky top-[113px] z-10">
             {COLUMNS.map(col => {
-              const count = tasks.filter(t => t.status === col.id).length
+              const count = envTasks.filter(t => t.status === col.id).length
               const isActive = activeTab === col.id
               const activeStyle =
                 col.id === 'todo' ? 'text-slate-700 border-slate-700' :
@@ -265,8 +314,8 @@ export default function App() {
           <main className="p-4">
             <KanbanColumn
               column={COLUMNS.find(c => c.id === activeTab)!}
-              tasks={tasks.filter(t => t.status === activeTab)}
-              categories={categories}
+              tasks={envTasks.filter(t => t.status === activeTab)}
+              categories={envCategories}
               activeFilter={activeFilter}
               onAddTask={() => setModal({ open: true, status: activeTab })}
               onMoveTask={moveTask}
@@ -283,8 +332,8 @@ export default function App() {
               <KanbanColumn
                 key={col.id}
                 column={col}
-                tasks={tasks.filter(t => t.status === col.id)}
-                categories={categories}
+                tasks={envTasks.filter(t => t.status === col.id)}
+                categories={envCategories}
                 activeFilter={activeFilter}
                 onAddTask={() => setModal({ open: true, status: col.id })}
                 onMoveTask={moveTask}
@@ -315,7 +364,7 @@ export default function App() {
         <TaskModal
           defaultStatus={modal.status}
           columns={COLUMNS}
-          categories={categories}
+          categories={envCategories}
           task={editingTask}
           onSave={saveTask}
           onAddCategory={addCategory}
