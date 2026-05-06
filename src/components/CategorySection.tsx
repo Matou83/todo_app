@@ -11,6 +11,7 @@ interface Props {
   onEdit: (id: string) => void
   onUpdateDescription: (id: string, description: string) => void
   allStatuses: Column[]
+  isHidden?: boolean
 }
 
 export default function CategorySection({
@@ -23,6 +24,7 @@ export default function CategorySection({
   onEdit,
   onUpdateDescription,
   allStatuses,
+  isHidden,
 }: Props) {
   // Couleur avec opacité légère pour le fond du header
   const hexToRgba = (hex: string, alpha: number) => {
@@ -65,6 +67,7 @@ export default function CategorySection({
           onEdit={onEdit}
           onUpdateDescription={onUpdateDescription}
           allStatuses={allStatuses}
+          isHidden={isHidden}
         />
       ))}
     </div>

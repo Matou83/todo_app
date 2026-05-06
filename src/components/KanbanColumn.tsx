@@ -14,6 +14,7 @@ interface Props {
   onEditTask: (id: string) => void
   onUpdateDescription: (id: string, description: string) => void
   allStatuses: Column[]
+  hiddenCategories: Set<string>
 }
 
 const COLUMN_STYLE: Record<Status, {
@@ -51,7 +52,7 @@ const COLUMN_STYLE: Record<Status, {
 }
 
 export default function KanbanColumn({
-  column, tasks, categories, activeFilter,
+  column, tasks, categories, activeFilter, hiddenCategories,
   onAddTask, onMoveTask, onDeleteTask, onEditTask, onUpdateDescription, allStatuses,
 }: Props) {
   const style = COLUMN_STYLE[column.id]
@@ -137,6 +138,7 @@ export default function KanbanColumn({
                 onEdit={onEditTask}
                 onUpdateDescription={onUpdateDescription}
                 allStatuses={allStatuses}
+                isHidden={hiddenCategories.has(category.id)}
               />
             ))
           )}

@@ -14,6 +14,7 @@ interface Props {
   allStatuses: Column[]
   category?: Category
   isDragOverlay?: boolean
+  isHidden?: boolean
 }
 
 const PRIORITY_STYLE: Record<Priority, { dot: string; text: string; bg: string; label: string }> = {
@@ -40,7 +41,7 @@ function getDueDateBadge(dueDate: number): { label: string; className: string } 
   }
 }
 
-export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescription, allStatuses, category, isDragOverlay }: Props) {
+export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescription, allStatuses, category, isDragOverlay, isHidden }: Props) {
   const [showMenu, setShowMenu] = useState(false)
   const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; right: number } | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -85,7 +86,7 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
       {...(!isDragOverlay ? listeners : {})}
       {...(!isDragOverlay ? attributes : {})}
       onClick={handleCardClick}
-      className={`bg-white rounded-xl px-4 py-3.5 border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group relative cursor-pointer active:cursor-grabbing animate-scale-in ${isDragging ? 'opacity-40' : ''} ${isDragOverlay ? 'shadow-xl rotate-1 opacity-95 cursor-grabbing' : ''}`}
+      className={`bg-white rounded-xl px-4 py-3.5 border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group relative cursor-pointer active:cursor-grabbing animate-scale-in ${isDragging ? 'opacity-40' : ''} ${isDragOverlay ? 'shadow-xl rotate-1 opacity-95 cursor-grabbing' : ''} ${isHidden ? 'blur-[4px] opacity-55 pointer-events-none select-none' : ''}`}
     >
       {/* Top row: title + menu button */}
       <div className="flex items-start gap-2 justify-between">
