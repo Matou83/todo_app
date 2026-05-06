@@ -46,7 +46,7 @@ export default function CategorySection({
       >
         <div className="flex items-center gap-2">
           <span className="text-xs" aria-hidden="true">{collapsed ? '▶' : '▼'}</span>
-          <span className="text-xs font-bold" style={{ color: category.color }}>{category.label}</span>
+          <span className="text-xs font-bold" style={{ color: category.color, ...(isHidden ? { filter: 'blur(4px)', userSelect: 'none' } : {}) }}>{category.label}</span>
         </div>
         <span
           className="text-xs font-semibold rounded-full px-2 py-0.5"
