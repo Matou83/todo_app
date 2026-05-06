@@ -33,6 +33,11 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
     disabled: isDragOverlay,
   })
   const dragStyle = transform ? { transform: CSS.Translate.toString(transform) } : undefined
+  const wasDragging = useRef(false)
+
+  useEffect(() => {
+    if (isDragging) wasDragging.current = true
+  }, [isDragging])
 
   useEffect(() => {
     if (!showMenu) return
@@ -45,13 +50,20 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
     return () => document.removeEventListener('mousedown', handleClick)
   }, [showMenu])
 
+  function handleCardClick() {
+    if (isDragOverlay) return
+    if (wasDragging.current) { wasDragging.current = false; return }
+    onEdit(task.id)
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={dragStyle}
       {...(!isDragOverlay ? listeners : {})}
       {...(!isDragOverlay ? attributes : {})}
-      className={`bg-white rounded-xl px-4 py-3.5 border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group relative cursor-grab active:cursor-grabbing animate-scale-in ${isDragging ? 'opacity-40' : ''} ${isDragOverlay ? 'shadow-xl rotate-1 opacity-95' : ''}`}
+      onClick={handleCardClick}
+      className={`bg-white rounded-xl px-4 py-3.5 border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group relative cursor-pointer active:cursor-grabbing animate-scale-in ${isDragging ? 'opacity-40' : ''} ${isDragOverlay ? 'shadow-xl rotate-1 opacity-95 cursor-grabbing' : ''}`}
     >
       {/* Top row: title + menu button */}
       <div className="flex items-start gap-2 justify-between">
@@ -59,7 +71,7 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
         {!isDragOverlay && (
           <div ref={menuRef} className="relative shrink-0">
             <button
-              onClick={() => setShowMenu(v => !v)}
+              onClick={e => { e.stopPropagation(); setShowMenu(v => !v) }}
               className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100 transition-all duration-150 cursor-pointer"
               aria-label="Options de la tâche"
               aria-expanded={showMenu}
