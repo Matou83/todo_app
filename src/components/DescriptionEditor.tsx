@@ -18,7 +18,7 @@ export default function DescriptionEditor({ value, onChange, placeholder = 'Desc
       TaskItem.configure({
       nested: false,
       HTMLAttributes: {
-        style: 'display:flex;flex-direction:row;align-items:center;gap:8px;',
+        style: 'display:flex;flex-direction:row;align-items:flex-start;gap:8px;',
       },
     }),
     ],
