@@ -29,7 +29,8 @@ function formatDate(ts: number): string {
 function getDueDateBadge(dueDate: number): { label: string; className: string } {
   const now = new Date()
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
-  const dueMidnight = new Date(new Date(dueDate).getFullYear(), new Date(dueDate).getMonth(), new Date(dueDate).getDate()).getTime()
+  const due = new Date(dueDate)
+  const dueMidnight = new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime()
   const days = Math.round((dueMidnight - todayMidnight) / 86400000)
 
   if (days < 0)  return { label: 'En retard', className: 'bg-red-50 text-red-600' }
@@ -37,7 +38,7 @@ function getDueDateBadge(dueDate: number): { label: string; className: string } 
   if (days === 1) return { label: 'Demain', className: 'bg-orange-50 text-orange-600' }
   if (days <= 3)  return { label: `Dans ${days} jours`, className: 'bg-orange-50 text-orange-600' }
   return {
-    label: new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(dueDate)),
+    label: new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(due),
     className: 'bg-teal-50 text-teal-600',
   }
 }
@@ -49,6 +50,8 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
   const menuWrapperRef = useRef<HTMLDivElement>(null)
   const menuBtnRef = useRef<HTMLButtonElement>(null)
   const priority = PRIORITY_STYLE[task.priority ?? 'medium']
+
+  const dueDateBadge = task.dueDate != null ? getDueDateBadge(task.dueDate) : null
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
@@ -196,18 +199,15 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
             {priority.label}
           </span>
         </div>
-        {task.dueDate && (() => {
-          const badge = getDueDateBadge(task.dueDate!)
-          return (
-            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${badge.className}`}>
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <path strokeLinecap="round" d="M16 2v4M8 2v4M3 10h18" />
-              </svg>
-              {badge.label}
-            </span>
-          )
-        })()}
+        {dueDateBadge && (
+          <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${dueDateBadge.className}`}>
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <path strokeLinecap="round" d="M16 2v4M8 2v4M3 10h18" />
+            </svg>
+            {dueDateBadge.label}
+          </span>
+        )}
       </div>
     </div>
   )
