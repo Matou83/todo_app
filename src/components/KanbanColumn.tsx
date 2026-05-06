@@ -82,7 +82,7 @@ export default function KanbanColumn({
   }
 
   return (
-    <div className="flex flex-col w-full sm:w-72 sm:shrink-0 animate-slide-up">
+    <div className="flex flex-col w-full sm:flex-1 sm:min-w-0 animate-slide-up">
       <div
           ref={setNodeRef}
           className={`rounded-2xl overflow-hidden flex flex-col flex-1 ${style.wrapper} shadow-sm transition-all duration-150 ${isOver ? 'ring-2 ring-teal-400 ring-offset-2' : ''}`}
