@@ -69,7 +69,19 @@ export default function App() {
   const envCategories = categories.filter(c =>
     env === 'perso' ? PERSO_CATEGORY_IDS.has(c.id) : !PERSO_CATEGORY_IDS.has(c.id)
   )
-  const envTasks = tasks.filter(t => envCategories.some(c => c.id === t.categoryId))
+  const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 }
+  const envTasks = tasks
+    .filter(t => envCategories.some(c => c.id === t.categoryId))
+    .sort((a, b) => {
+      const aHas = a.dueDate != null
+      const bHas = b.dueDate != null
+      if (aHas !== bHas) return aHas ? -1 : 1
+      if (aHas && bHas) {
+        const dateDiff = a.dueDate! - b.dueDate!
+        if (dateDiff !== 0) return dateDiff
+      }
+      return (PRIORITY_ORDER[a.priority] ?? 1) - (PRIORITY_ORDER[b.priority] ?? 1)
+    })
 
   function switchEnv(next: Env) {
     setEnv(next)
