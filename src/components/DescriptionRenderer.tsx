@@ -33,11 +33,11 @@ function renderNode(node: ChildNode, idx: number, onToggle: ((index: number) => 
     const ci = checkboxIndex.current++
     const text = el.textContent ?? ''
     return (
-      <li key={idx} className="flex items-start gap-1.5">
+      <li key={idx} className="flex items-center gap-1.5">
         <button
           type="button"
           onClick={e => { e.stopPropagation(); onToggle?.(ci) }}
-          className={`w-3.5 h-3.5 rounded border flex-shrink-0 mt-0.5 flex items-center justify-center transition-colors ${checked ? 'bg-teal-500 border-teal-500' : 'border-slate-300 hover:border-teal-400'} ${onToggle ? 'cursor-pointer' : 'cursor-default'}`}
+          className={`w-3.5 h-3.5 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${checked ? 'bg-teal-500 border-teal-500' : 'border-slate-300 hover:border-teal-400'} ${onToggle ? 'cursor-pointer' : 'cursor-default'}`}
           aria-label={checked ? 'Décocher' : 'Cocher'}
         >
           {checked && (
