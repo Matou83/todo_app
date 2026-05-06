@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { type Column, type Status, type Priority, type Task, type Category, DEFAULT_CATEGORIES } from '../types'
+import DescriptionEditor from './DescriptionEditor'
 
 interface Props {
   defaultStatus: Status
@@ -115,16 +116,12 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
 
           {/* Description */}
           <div>
-            <label htmlFor="task-desc" className="block text-sm font-semibold text-[#134E4A] mb-1.5">
+            <label className="block text-sm font-semibold text-[#134E4A] mb-1.5">
               Description
             </label>
-            <textarea
-              id="task-desc"
+            <DescriptionEditor
               value={description}
-              onChange={e => setDescription(e.target.value)}
-              placeholder="Description optionnelle…"
-              rows={3}
-              className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-[#134E4A] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-shadow resize-none"
+              onChange={setDescription}
             />
           </div>
 

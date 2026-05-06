@@ -1,0 +1,96 @@
+<h2>3 approches pour les catégories</h2>
+<p class="subtitle">Clique sur celle qui te parle le plus</p>
+
+<div class="options">
+
+  <!-- Approche A -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Swimlanes horizontales</h3>
+      <p>Les catégories deviennent des <strong>lignes horizontales</strong> qui traversent toutes les colonnes. Chaque ligne = une catégorie, repliable.</p>
+      <div style="margin-top: 0.75rem; background: #f8fafc; border-radius: 6px; padding: 0.75rem; font-size: 0.8rem;">
+        <div style="display: grid; grid-template-columns: 80px 1fr 1fr 1fr; gap: 4px; align-items: center;">
+          <div></div>
+          <div style="text-align:center; font-weight:600; color:#64748b; font-size:0.7rem;">À FAIRE</div>
+          <div style="text-align:center; font-weight:600; color:#0d9488; font-size:0.7rem;">EN COURS</div>
+          <div style="text-align:center; font-weight:600; color:#f97316; font-size:0.7rem;">TERMINÉ</div>
+          <div style="background:#e0f2fe; border-radius:4px; padding:4px 6px; font-size:0.7rem; font-weight:600; color:#0369a1;">▼ Ops</div>
+          <div style="background:#f1f5f9; border-radius:4px; padding:4px; font-size:0.7rem;">Tâche 1<br/>Tâche 2</div>
+          <div style="background:#f1f5f9; border-radius:4px; padding:4px; font-size:0.7rem;">Tâche 3</div>
+          <div style="background:#f1f5f9; border-radius:4px; padding:4px; font-size:0.7rem;">—</div>
+          <div style="background:#fce7f3; border-radius:4px; padding:4px 6px; font-size:0.7rem; font-weight:600; color:#9d174d;">▶ Head of</div>
+          <div style="background:#f1f5f9; border-radius:4px; padding:4px; font-size:0.7rem; color:#94a3b8; font-style:italic;">replié</div>
+          <div style="background:#f1f5f9; border-radius:4px; padding:4px; font-size:0.7rem; color:#94a3b8; font-style:italic;">replié</div>
+          <div style="background:#f1f5f9; border-radius:4px; padding:4px; font-size:0.7rem; color:#94a3b8; font-style:italic;">replié</div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top: 0.75rem;">
+        <div class="pros"><h4>+</h4><ul><li>Standard kanban (Linear, Jira)</li><li>Vue globale par catégorie</li></ul></div>
+        <div class="cons"><h4>−</h4><ul><li>Peut devenir long verticalement</li><li>Refonte importante de l'UI</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approche B -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Accordéons dans les colonnes ⭐ Recommandé</h3>
+      <p>Dans chaque colonne, les tâches sont <strong>groupées par catégorie avec un header repliable</strong>. Filtre global en haut du board.</p>
+      <div style="margin-top: 0.75rem; background: #f8fafc; border-radius: 6px; padding: 0.75rem; font-size: 0.8rem;">
+        <div style="background:#e2e8f0; border-radius:4px; padding:4px 8px; margin-bottom:6px; font-size:0.7rem; color:#475569;">🔍 Filtre : <span style="background:#0d9488;color:white;border-radius:3px;padding:1px 5px;margin-right:3px;">Ops</span><span style="background:#e2e8f0;border-radius:3px;padding:1px 5px;margin-right:3px;">Head of</span><span style="background:#e2e8f0;border-radius:3px;padding:1px 5px;">IA</span></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+          <div style="background:white; border-radius:6px; padding:6px; border:1px solid #e2e8f0;">
+            <div style="font-weight:600; color:#475569; font-size:0.7rem; margin-bottom:4px; border-top:2px solid #475569; padding-top:4px;">À FAIRE</div>
+            <div style="background:#e0f2fe; border-radius:3px; padding:3px 6px; font-size:0.7rem; font-weight:600; color:#0369a1; margin-bottom:3px;">▼ Ops (2)</div>
+            <div style="background:#f1f5f9; border-radius:3px; padding:3px 6px; font-size:0.7rem; margin-bottom:2px;">Tâche 1</div>
+            <div style="background:#f1f5f9; border-radius:3px; padding:3px 6px; font-size:0.7rem; margin-bottom:4px;">Tâche 2</div>
+            <div style="background:#fce7f3; border-radius:3px; padding:3px 6px; font-size:0.7rem; font-weight:600; color:#9d174d;">▶ Head of (3)</div>
+          </div>
+          <div style="background:white; border-radius:6px; padding:6px; border:1px solid #e2e8f0;">
+            <div style="font-weight:600; color:#0d9488; font-size:0.7rem; margin-bottom:4px; border-top:2px solid #0d9488; padding-top:4px;">EN COURS</div>
+            <div style="background:#e0f2fe; border-radius:3px; padding:3px 6px; font-size:0.7rem; font-weight:600; color:#0369a1; margin-bottom:3px;">▼ Ops (1)</div>
+            <div style="background:#f1f5f9; border-radius:3px; padding:3px 6px; font-size:0.7rem; margin-bottom:4px;">Tâche 3</div>
+            <div style="background:#fce7f3; border-radius:3px; padding:3px 6px; font-size:0.7rem; font-weight:600; color:#9d174d; margin-bottom:3px;">▼ Head of (1)</div>
+            <div style="background:#f1f5f9; border-radius:3px; padding:3px 6px; font-size:0.7rem;">Tâche 4</div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top: 0.75rem;">
+        <div class="pros"><h4>+</h4><ul><li>Garde la structure actuelle</li><li>Collapse + filtre natifs</li><li>Évolution progressive</li></ul></div>
+        <div class="cons"><h4>−</h4><ul><li>Colonnes peuvent être longues</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approche C -->
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Sidebar catégories + bordure couleur</h3>
+      <p>Une <strong>sidebar gauche</strong> avec les catégories. Cliquer filtre le board. Chaque carte a une bordure colorée selon sa catégorie.</p>
+      <div style="margin-top: 0.75rem; background: #f8fafc; border-radius: 6px; padding: 0.75rem; font-size: 0.8rem;">
+        <div style="display:grid; grid-template-columns: 70px 1fr; gap:6px;">
+          <div style="background:white; border-radius:6px; padding:6px; border:1px solid #e2e8f0;">
+            <div style="font-size:0.65rem; font-weight:600; color:#94a3b8; margin-bottom:6px;">CATÉGORIES</div>
+            <div style="background:#0d9488; color:white; border-radius:3px; padding:3px 6px; font-size:0.65rem; margin-bottom:3px;">● Ops</div>
+            <div style="background:#f1f5f9; border-radius:3px; padding:3px 6px; font-size:0.65rem; margin-bottom:3px; color:#475569;">● Head of</div>
+            <div style="background:#f1f5f9; border-radius:3px; padding:3px 6px; font-size:0.65rem; margin-bottom:3px; color:#475569;">● IA</div>
+            <div style="background:#f1f5f9; border-radius:3px; padding:3px 6px; font-size:0.65rem; color:#475569;">● Perso</div>
+          </div>
+          <div style="background:white; border-radius:6px; padding:6px; border:1px solid #e2e8f0;">
+            <div style="font-weight:600; color:#475569; font-size:0.7rem; margin-bottom:4px;">À FAIRE — filtré sur Ops</div>
+            <div style="border-left:3px solid #0d9488; background:#f1f5f9; border-radius:0 3px 3px 0; padding:3px 6px; font-size:0.7rem; margin-bottom:3px;">Tâche 1</div>
+            <div style="border-left:3px solid #0d9488; background:#f1f5f9; border-radius:0 3px 3px 0; padding:3px 6px; font-size:0.7rem;">Tâche 2</div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top: 0.75rem;">
+        <div class="pros"><h4>+</h4><ul><li>Navigation très rapide</li><li>UX type Notion/Linear</li></ul></div>
+        <div class="cons"><h4>−</h4><ul><li>Pas de vue multi-catégories simultanée</li><li>Sidebar = moins de place pour le board</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -9,6 +9,7 @@ interface Props {
   onMove: (id: string, status: Status) => void
   onDelete: (id: string) => void
   onEdit: (id: string) => void
+  onUpdateDescription: (id: string, description: string) => void
   allStatuses: Column[]
 }
 
@@ -20,6 +21,7 @@ export default function CategorySection({
   onMove,
   onDelete,
   onEdit,
+  onUpdateDescription,
   allStatuses,
 }: Props) {
   // Couleur avec opacité légère pour le fond du header
@@ -61,6 +63,7 @@ export default function CategorySection({
           onMove={onMove}
           onDelete={onDelete}
           onEdit={onEdit}
+          onUpdateDescription={onUpdateDescription}
           allStatuses={allStatuses}
         />
       ))}

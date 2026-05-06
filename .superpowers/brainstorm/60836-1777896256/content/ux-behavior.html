@@ -1,0 +1,78 @@
+<h2>Comportements UX — Approche B</h2>
+<p class="subtitle">Les 3 interactions principales à valider</p>
+
+<div class="section">
+  <h3>① FilterBar — sélection catégorie</h3>
+  <div class="mockup">
+    <div class="mockup-header">Haut du board (sous le header)</div>
+    <div class="mockup-body" style="padding: 12px 16px;">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-right:4px;">FILTRE :</span>
+        <span style="background:#134e4a; color:white; border-radius:20px; padding:4px 12px; font-size:0.8rem; font-weight:600; cursor:pointer;">Toutes</span>
+        <span style="background:#3B82F6; color:white; border-radius:20px; padding:4px 12px; font-size:0.8rem; font-weight:600; cursor:pointer;">Ops</span>
+        <span style="background:#f1f5f9; color:#475569; border-radius:20px; padding:4px 12px; font-size:0.8rem; font-weight:500; cursor:pointer; border:1px solid #e2e8f0;">Head of</span>
+        <span style="background:#f1f5f9; color:#475569; border-radius:20px; padding:4px 12px; font-size:0.8rem; font-weight:500; cursor:pointer; border:1px solid #e2e8f0;">IA</span>
+        <span style="background:#f1f5f9; color:#475569; border-radius:20px; padding:4px 12px; font-size:0.8rem; font-weight:500; cursor:pointer; border:1px solid #e2e8f0;">Perso</span>
+        <span style="background:#f8fafc; color:#94a3b8; border-radius:20px; padding:4px 12px; font-size:0.8rem; border:1px dashed #cbd5e1; cursor:pointer;">+ Catégorie</span>
+      </div>
+      <p style="font-size:0.75rem; color:#94a3b8; margin-top:8px; margin-bottom:0;">→ Quand "Ops" est actif : seules les tâches Ops sont visibles dans toutes les colonnes. Les sections vides sont masquées.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>② CategorySection — collapse dans une colonne</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">État déplié</div>
+      <div class="mockup-body" style="padding:10px; display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; background:#EFF6FF; border-radius:6px; padding:6px 10px; cursor:pointer; border-left:3px solid #3B82F6;">
+          <span style="font-size:0.78rem; font-weight:700; color:#1d4ed8;">▼ Ops</span>
+          <span style="background:#dbeafe; color:#1d4ed8; border-radius:10px; padding:1px 7px; font-size:0.7rem; font-weight:600;">2</span>
+        </div>
+        <div style="background:white; border-radius:8px; padding:8px 10px; border:1px solid #e2e8f0; font-size:0.8rem; color:#134e4a;">Mettre à jour le runbook</div>
+        <div style="background:white; border-radius:8px; padding:8px 10px; border:1px solid #e2e8f0; font-size:0.8rem; color:#134e4a;">Revoir les alertes Datadog</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; background:#F5F3FF; border-radius:6px; padding:6px 10px; cursor:pointer; border-left:3px solid #8B5CF6;">
+          <span style="font-size:0.78rem; font-weight:700; color:#6d28d9;">▼ Head of</span>
+          <span style="background:#ede9fe; color:#6d28d9; border-radius:10px; padding:1px 7px; font-size:0.7rem; font-weight:600;">1</span>
+        </div>
+        <div style="background:white; border-radius:8px; padding:8px 10px; border:1px solid #e2e8f0; font-size:0.8rem; color:#134e4a;">1-1 avec l'équipe</div>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">Ops replié</div>
+      <div class="mockup-body" style="padding:10px; display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; background:#EFF6FF; border-radius:6px; padding:6px 10px; cursor:pointer; border-left:3px solid #3B82F6; opacity:0.7;">
+          <span style="font-size:0.78rem; font-weight:700; color:#1d4ed8;">▶ Ops</span>
+          <span style="background:#dbeafe; color:#1d4ed8; border-radius:10px; padding:1px 7px; font-size:0.7rem; font-weight:600;">2</span>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; background:#F5F3FF; border-radius:6px; padding:6px 10px; cursor:pointer; border-left:3px solid #8B5CF6;">
+          <span style="font-size:0.78rem; font-weight:700; color:#6d28d9;">▼ Head of</span>
+          <span style="background:#ede9fe; color:#6d28d9; border-radius:10px; padding:1px 7px; font-size:0.7rem; font-weight:600;">1</span>
+        </div>
+        <div style="background:white; border-radius:8px; padding:8px 10px; border:1px solid #e2e8f0; font-size:0.8rem; color:#134e4a;">1-1 avec l'équipe</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>③ Créer une nouvelle catégorie</h3>
+  <div class="mockup">
+    <div class="mockup-header">Dans le modal AddTask — champ catégorie</div>
+    <div class="mockup-body" style="padding:12px 16px; display:flex; flex-direction:column; gap:8px; max-width:380px;">
+      <div style="font-size:0.8rem; font-weight:600; color:#134e4a;">Catégorie</div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <span style="background:#3B82F6; color:white; border-radius:6px; padding:4px 10px; font-size:0.78rem; font-weight:600; cursor:pointer;">Ops</span>
+        <span style="background:#f1f5f9; color:#475569; border-radius:6px; padding:4px 10px; font-size:0.78rem; border:1px solid #e2e8f0; cursor:pointer;">Head of</span>
+        <span style="background:#f1f5f9; color:#475569; border-radius:6px; padding:4px 10px; font-size:0.78rem; border:1px solid #e2e8f0; cursor:pointer;">IA</span>
+        <span style="background:#f1f5f9; color:#475569; border-radius:6px; padding:4px 10px; font-size:0.78rem; border:1px solid #e2e8f0; cursor:pointer;">Perso</span>
+        <span style="background:white; color:#0d9488; border-radius:6px; padding:4px 10px; font-size:0.78rem; border:1px dashed #0d9488; cursor:pointer;">+ Nouvelle</span>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center; background:#f0fdfa; border-radius:6px; padding:6px 10px; border:1px solid #99f6e4;">
+        <input style="border:none; background:transparent; font-size:0.8rem; color:#134e4a; flex:1; outline:none;" placeholder="Nom de la catégorie…" value="" />
+        <span style="font-size:0.75rem; color:#0d9488; font-weight:600; cursor:pointer;">Créer</span>
+      </div>
+    </div>
+  </div>
+</div>

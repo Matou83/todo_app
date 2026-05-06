@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Description enrichie</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; padding: 32px 24px; color: #1e293b; }
+  h1 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #64748b; margin-bottom: 40px; }
+  .section { margin-bottom: 56px; }
+  .section-title { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 16px; }
+  .row { display: flex; gap: 24px; flex-wrap: wrap; }
+  .card-wrap { flex: 1; min-width: 280px; max-width: 460px; }
+  .label { font-size: 12px; font-weight: 700; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .05em; }
+
+  /* ── Shared modal chrome ── */
+  .modal { background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.12); overflow: hidden; }
+  .modal-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+  .modal-header h2 { font-size: 14px; font-weight: 700; color: #134E4A; }
+  .modal-header button { width: 28px; height: 28px; background: #f8fafc; border: none; border-radius: 8px; color: #94a3b8; font-size: 14px; cursor: pointer; }
+  .modal-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .field-label { font-size: 12px; font-weight: 700; color: #134E4A; margin-bottom: 6px; }
+  .input { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 9px 12px; font-size: 13px; color: #134E4A; background: white; outline: none; font-family: inherit; }
+  .modal-footer { padding: 12px 20px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 8px; }
+  .btn-cancel { padding: 8px 14px; background: none; border: none; font-size: 13px; color: #64748b; font-weight: 600; cursor: pointer; border-radius: 8px; }
+  .btn-save { padding: 8px 16px; background: #0D9488; color: white; border: none; font-size: 13px; font-weight: 700; cursor: pointer; border-radius: 10px; }
+
+  /* ── Option A : Toolbar + textarea ── */
+  .toolbar { display: flex; gap: 4px; padding: 6px 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-bottom: none; border-radius: 10px 10px 0 0; }
+  .toolbar-btn { display: flex; align-items: center; gap: 5px; padding: 5px 9px; background: white; border: 1px solid #e2e8f0; border-radius: 7px; font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; white-space: nowrap; }
+  .toolbar-btn:hover { background: #f1f5f9; }
+  .toolbar-btn svg { width: 13px; height: 13px; }
+  .toolbar-sep { width: 1px; background: #e2e8f0; margin: 4px 2px; }
+  .textarea-a { border-radius: 0 0 10px 10px; border-top: none; resize: none; height: 100px; font-family: inherit; line-height: 1.6; }
+
+  /* ── Option B : Tabs éditeur/aperçu ── */
+  .tab-bar { display: flex; border-bottom: 1px solid #e2e8f0; }
+  .tab { padding: 7px 14px; font-size: 12px; font-weight: 700; border: none; background: none; cursor: pointer; color: #94a3b8; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.active { color: #134E4A; border-bottom-color: #0D9488; }
+  .editor-b { border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 10px 10px; padding: 10px 12px; min-height: 110px; font-size: 12px; color: #475569; line-height: 1.7; font-family: 'SF Mono', 'Fira Code', monospace; background: #fafafa; }
+  .preview-b { border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 10px 10px; padding: 10px 12px; min-height: 110px; }
+  .hint { font-size: 10px; color: #94a3b8; margin-top: 4px; }
+
+  /* ── Option C : Inline WYSIWYG ── */
+  .wysiwyg { border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+  .wysiwyg-toolbar { display: flex; gap: 2px; padding: 5px 8px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+  .wysiwyg-btn { width: 28px; height: 26px; display: flex; align-items: center; justify-content: center; background: none; border: none; border-radius: 6px; color: #64748b; cursor: pointer; font-size: 13px; font-weight: 700; }
+  .wysiwyg-btn:hover { background: #e2e8f0; }
+  .wysiwyg-btn.active { background: #e0f2fe; color: #0369a1; }
+  .wysiwyg-content { padding: 10px 12px; min-height: 100px; font-size: 13px; line-height: 1.7; color: #334155; }
+
+  /* ── Preview elements ── */
+  .preview-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .preview-list li { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; color: #334155; line-height: 1.5; }
+  .cb { width: 14px; height: 14px; border: 1.5px solid #cbd5e1; border-radius: 4px; flex-shrink: 0; margin-top: 1px; }
+  .cb.checked { background: #0D9488; border-color: #0D9488; display: flex; align-items: center; justify-content: center; }
+  .cb.checked::after { content: '✓'; font-size: 9px; color: white; font-weight: 900; }
+  .bullet { width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .done-text { text-decoration: line-through; color: #94a3b8; }
+
+  /* ── Kanban card preview ── */
+  .kanban-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .kanban-card h3 { font-size: 13px; font-weight: 700; color: #134E4A; margin-bottom: 8px; }
+  .progress-bar-wrap { margin-bottom: 8px; }
+  .progress-label { font-size: 10px; color: #94a3b8; font-weight: 600; margin-bottom: 3px; }
+  .progress-bar { height: 4px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #0D9488; border-radius: 99px; }
+  .card-desc { font-size: 11px; color: #64748b; line-height: 1.6; }
+  .card-footer { display: flex; align-items: center; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px solid #f1f5f9; }
+  .cat-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; color: white; }
+  .pri-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; display: flex; align-items: center; gap: 4px; }
+</style>
+</head>
+<body>
+
+<h1>Description enrichie — Propositions</h1>
+<p class="subtitle">Ajouter des checkboxes et listes à puces dans la description d'une tâche.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- OPTION A : Toolbar + textarea markdown-like -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">A — Toolbar + saisie structurée</div>
+  <div class="row">
+    <div class="card-wrap">
+      <div class="label">Modal — édition</div>
+      <div class="modal">
+        <div class="modal-header"><h2>Modifier la tâche</h2><button>✕</button></div>
+        <div class="modal-body">
+          <div>
+            <div class="field-label">Titre</div>
+            <div class="input" style="color:#94a3b8">Audit sécurité infrastructure</div>
+          </div>
+          <div>
+            <div class="field-label">Description</div>
+            <!-- Toolbar -->
+            <div class="toolbar">
+              <button class="toolbar-btn">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="1" width="6" height="6" rx="1.5"/><path d="M4 1v6M1 4h6"/></svg>
+                Checkbox
+              </button>
+              <div class="toolbar-sep"></div>
+              <button class="toolbar-btn">
+                <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="2.5" cy="5" r="1.5"/><circle cx="2.5" cy="11" r="1.5"/><path d="M6 5h8M6 11h8" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                Puce
+              </button>
+            </div>
+            <textarea class="input textarea-a">- [ ] Vérifier les accès SSH
+- [ ] Scanner les ports ouverts
+- [x] Mettre à jour les certificats
+- Contacter l'équipe infra</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel">Annuler</button>
+          <button class="btn-save">Enregistrer</button>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:8px">Cliquer sur "Checkbox" insère <code>- [ ]</code> à la ligne courante. "Puce" insère <code>- </code>. La syntaxe reste visible mais simple.</div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="label">Ticket — vue Kanban</div>
+      <div class="kanban-card">
+        <h3>Audit sécurité infrastructure</h3>
+        <!-- Progress bar checkboxes -->
+        <div class="progress-bar-wrap">
+          <div class="progress-label">1/3 sous-tâches</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:33%"></div></div>
+        </div>
+        <ul class="preview-list">
+          <li><div class="cb"></div><span>Vérifier les accès SSH</span></li>
+          <li><div class="cb"></div><span>Scanner les ports ouverts</span></li>
+          <li><div class="cb checked"></div><span class="done-text">Mettre à jour les certificats</span></li>
+          <li><div class="bullet"></div><span>Contacter l'équipe infra</span></li>
+        </ul>
+        <div class="card-footer">
+          <span class="cat-badge" style="background:#3B82F6">Ops</span>
+          <span class="pri-badge" style="background:#fef2f2;color:#dc2626"><span style="width:6px;height:6px;background:#ef4444;border-radius:50%;display:inline-block"></span>Haute</span>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:8px">Les checkboxes sont cochables directement sur le ticket. Une barre de progression résume l'avancement.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- OPTION B : Onglets Éditeur / Aperçu -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">B — Onglets Éditeur / Aperçu</div>
+  <div class="row">
+    <div class="card-wrap">
+      <div class="label">Modal — onglet Éditeur</div>
+      <div class="modal">
+        <div class="modal-header"><h2>Modifier la tâche</h2><button>✕</button></div>
+        <div class="modal-body">
+          <div>
+            <div class="field-label">Titre</div>
+            <div class="input" style="color:#94a3b8">Audit sécurité infrastructure</div>
+          </div>
+          <div>
+            <div class="field-label">Description</div>
+            <div class="tab-bar">
+              <button class="tab active">Éditeur</button>
+              <button class="tab">Aperçu</button>
+            </div>
+            <div class="editor-b">- [ ] Vérifier les accès SSH<br>- [ ] Scanner les ports ouverts<br>- [x] Mettre à jour les certificats<br>- Contacter l'équipe infra</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel">Annuler</button>
+          <button class="btn-save">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="label">Modal — onglet Aperçu</div>
+      <div class="modal">
+        <div class="modal-header"><h2>Modifier la tâche</h2><button>✕</button></div>
+        <div class="modal-body">
+          <div>
+            <div class="field-label">Titre</div>
+            <div class="input" style="color:#94a3b8">Audit sécurité infrastructure</div>
+          </div>
+          <div>
+            <div class="field-label">Description</div>
+            <div class="tab-bar">
+              <button class="tab">Éditeur</button>
+              <button class="tab active">Aperçu</button>
+            </div>
+            <div class="preview-b">
+              <ul class="preview-list">
+                <li><div class="cb"></div><span>Vérifier les accès SSH</span></li>
+                <li><div class="cb"></div><span>Scanner les ports ouverts</span></li>
+                <li><div class="cb checked"></div><span class="done-text">Mettre à jour les certificats</span></li>
+                <li><div class="bullet"></div><span>Contacter l'équipe infra</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel">Annuler</button>
+          <button class="btn-save">Enregistrer</button>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:8px">Syntaxe markdown brute en édition, rendu visuel en aperçu. Plus familier pour les devs, moins intuitif pour les autres.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- OPTION C : WYSIWYG inline -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">C — Éditeur WYSIWYG inline</div>
+  <div class="row">
+    <div class="card-wrap">
+      <div class="label">Modal — édition WYSIWYG</div>
+      <div class="modal">
+        <div class="modal-header"><h2>Modifier la tâche</h2><button>✕</button></div>
+        <div class="modal-body">
+          <div>
+            <div class="field-label">Titre</div>
+            <div class="input" style="color:#94a3b8">Audit sécurité infrastructure</div>
+          </div>
+          <div>
+            <div class="field-label">Description</div>
+            <div class="wysiwyg">
+              <div class="wysiwyg-toolbar">
+                <button class="wysiwyg-btn active" title="Liste de cases à cocher">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M2.5 5l1.5 1.5L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9 5h6M9 11h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="1" y="8" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+                </button>
+                <button class="wysiwyg-btn" title="Liste à puces">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="2" cy="5" r="1.5" fill="currentColor"/><circle cx="2" cy="11" r="1.5" fill="currentColor"/><path d="M5 5h9M5 11h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </button>
+                <div style="width:1px;background:#e2e8f0;margin:3px 2px"></div>
+                <button class="wysiwyg-btn" title="Texte libre">T</button>
+              </div>
+              <div class="wysiwyg-content">
+                <ul class="preview-list">
+                  <li><div class="cb"></div><span>Vérifier les accès SSH</span></li>
+                  <li><div class="cb"></div><span>Scanner les ports ouverts</span></li>
+                  <li><div class="cb checked"></div><span class="done-text">Mettre à jour les certificats</span></li>
+                  <li><div class="bullet"></div><span>Contacter l'équipe infra</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel">Annuler</button>
+          <button class="btn-save">Enregistrer</button>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:8px">Pas de syntaxe visible — on voit directement le résultat. Nécessite une lib externe (Tiptap ~50kb). Le plus agréable à utiliser, le plus lourd à implémenter.</div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="label">Ticket — vue Kanban (commun A, B, C)</div>
+      <div class="kanban-card">
+        <h3>Audit sécurité infrastructure</h3>
+        <div class="progress-bar-wrap">
+          <div class="progress-label">1/3 sous-tâches</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:33%"></div></div>
+        </div>
+        <ul class="preview-list">
+          <li><div class="cb"></div><span>Vérifier les accès SSH</span></li>
+          <li><div class="cb"></div><span>Scanner les ports ouverts</span></li>
+          <li><div class="cb checked"></div><span class="done-text">Mettre à jour les certificats</span></li>
+          <li><div class="bullet"></div><span>Contacter l'équipe infra</span></li>
+        </ul>
+        <div class="card-footer">
+          <span class="cat-badge" style="background:#3B82F6">Ops</span>
+          <span class="pri-badge" style="background:#fef2f2;color:#dc2626"><span style="width:6px;height:6px;background:#ef4444;border-radius:50%;display:inline-block"></span>Haute</span>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:8px">Le rendu sur le ticket est identique pour les 3 options. Les checkboxes sont interactives (clic pour cocher/décocher).</div>
+    </div>
+  </div>
+</div>
+
+<p style="font-size:13px;color:#94a3b8;text-align:center;margin-top:8px">
+  💡 Ma recommandation : <strong>A (toolbar + textarea)</strong> — bon compromis entre simplicité d'implémentation et ergonomie. Pas de dépendance externe, fonctionne bien sur mobile.
+</p>
+
+</body>
+</html>

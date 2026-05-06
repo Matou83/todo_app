@@ -1,0 +1,209 @@
+<h2>Option A — Mockup détaillé</h2>
+<p class="subtitle">Simulation de l'app sur un écran mobile (375px). Interagis avec les onglets pour voir le changement de colonne.</p>
+
+<div style="display:flex;justify-content:center;margin-top:12px">
+  <!-- Phone frame -->
+  <div style="width:375px;border:3px solid #1e293b;border-radius:36px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.25);background:#F0FDFA;font-family:system-ui,-apple-system,sans-serif">
+
+    <!-- Status bar -->
+    <div style="background:white;padding:10px 20px 0;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;font-weight:700;color:#1e293b">9:41</span>
+      <div style="display:flex;gap:4px;align-items:center">
+        <svg width="14" height="10" viewBox="0 0 14 10" fill="#1e293b"><rect x="0" y="3" width="2" height="7" rx="1"/><rect x="3" y="2" width="2" height="8" rx="1"/><rect x="6" y="1" width="2" height="9" rx="1"/><rect x="9" y="0" width="2" height="10" rx="1"/></svg>
+        <svg width="14" height="10" viewBox="0 0 16 12" fill="none" stroke="#1e293b" stroke-width="1.5"><path d="M8 3C5.5 3 3.3 4 1.7 5.7L0 4C2 2 4.8 1 8 1s6 1 8 3l-1.7 1.7C12.7 4 10.5 3 8 3z"/><path d="M8 7c-1.3 0-2.4.5-3.2 1.3L3 6.5C4.2 5.3 6 4.5 8 4.5s3.8.8 5 2L11.2 8.3C10.4 7.5 9.3 7 8 7z"/><circle cx="8" cy="11" r="1.5" fill="#1e293b" stroke="none"/></svg>
+        <div style="width:22px;height:10px;border:1.5px solid #1e293b;border-radius:3px;position:relative;padding:1.5px">
+          <div style="height:100%;width:75%;background:#1e293b;border-radius:1px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div style="background:white;border-bottom:1px solid #f0fdf4;padding:10px 16px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;background:linear-gradient(135deg,#2dd4bf,#0f766e);border-radius:10px;display:flex;align-items:center;justify-content:center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#134E4A;line-height:1.2">Kanban Board</div>
+          <div style="font-size:11px;color:#0d9488;font-weight:500">3/7 terminées</div>
+        </div>
+      </div>
+      <!-- Bouton + compact sur mobile -->
+      <button style="width:34px;height:34px;background:#f97316;border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+      </button>
+    </div>
+
+    <!-- FilterBar (scroll horizontal sur mobile) -->
+    <div style="background:white;border-bottom:1px solid #f1f5f9;padding:8px 16px;display:flex;align-items:center;gap:6px;overflow-x:auto;white-space:nowrap">
+      <span style="font-size:10px;font-weight:700;color:#94a3b8;margin-right:2px;flex-shrink:0">FILTRE</span>
+      <span style="background:#134E4A;color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;flex-shrink:0">Toutes</span>
+      <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;flex-shrink:0">Ops</span>
+      <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;flex-shrink:0">Head of</span>
+      <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;flex-shrink:0">IA</span>
+      <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;flex-shrink:0">Perso</span>
+      <span style="border:1.5px dashed #cbd5e1;color:#94a3b8;font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;flex-shrink:0">+ Cat.</span>
+    </div>
+
+    <!-- Onglets colonnes -->
+    <div id="tabs" style="background:white;border-bottom:1px solid #e2e8f0;display:flex">
+      <button onclick="switchTab('todo')" id="tab-todo" style="flex:1;padding:10px 4px;border:none;background:none;font-size:12px;font-weight:700;color:#134E4A;border-bottom:2px solid #134E4A;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px">
+        <span>À faire</span>
+        <span style="background:#f1f5f9;color:#64748b;font-size:10px;padding:1px 7px;border-radius:99px">4</span>
+      </button>
+      <button onclick="switchTab('in_progress')" id="tab-in_progress" style="flex:1;padding:10px 4px;border:none;background:none;font-size:12px;font-weight:700;color:#94a3b8;border-bottom:2px solid transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px">
+        <span>En cours</span>
+        <span style="background:#f1f5f9;color:#94a3b8;font-size:10px;padding:1px 7px;border-radius:99px">2</span>
+      </button>
+      <button onclick="switchTab('done')" id="tab-done" style="flex:1;padding:10px 4px;border:none;background:none;font-size:12px;font-weight:700;color:#94a3b8;border-bottom:2px solid transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px">
+        <span>Terminé</span>
+        <span style="background:#fff7ed;color:#f97316;font-size:10px;padding:1px 7px;border-radius:99px">3</span>
+      </button>
+    </div>
+
+    <!-- Contenu colonne -->
+    <div style="height:480px;overflow-y:auto;padding:12px">
+
+      <!-- === À FAIRE === -->
+      <div id="col-todo">
+        <!-- Groupe catégorie Ops -->
+        <div style="margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:6px;padding:0 2px;margin-bottom:6px">
+            <span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;display:inline-block"></span>
+            <span style="font-size:11px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:.05em">Ops</span>
+            <span style="font-size:10px;background:#eff6ff;color:#3b82f6;padding:1px 6px;border-radius:99px">2</span>
+          </div>
+          <!-- Carte 1 -->
+          <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+              <span style="font-size:13px;font-weight:600;color:#134E4A;flex:1;line-height:1.3">Revoir les KPIs du dashboard</span>
+              <button style="width:28px;height:28px;border:none;background:#f8fafc;border-radius:8px;font-size:16px;color:#94a3b8;cursor:pointer;flex-shrink:0;margin-left:6px">⋯</button>
+            </div>
+            <p style="font-size:11px;color:#64748b;line-height:1.5;margin:0 0 8px">Analyser les métriques de conversion et mettre à jour les graphiques.</p>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid #f1f5f9">
+              <div style="display:flex;gap:4px;flex-wrap:wrap">
+                <span style="background:#3b82f6;color:white;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px">Ops</span>
+                <span style="background:#fef2f2;color:#ef4444;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;display:flex;align-items:center;gap:3px"><span style="width:5px;height:5px;background:#ef4444;border-radius:50%;display:inline-block"></span>Haute</span>
+              </div>
+              <span style="font-size:10px;color:#94a3b8">5 mai</span>
+            </div>
+          </div>
+          <!-- Carte 2 -->
+          <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+              <span style="font-size:13px;font-weight:600;color:#134E4A;flex:1;line-height:1.3">Envoyer le rapport mensuel</span>
+              <button style="width:28px;height:28px;border:none;background:#f8fafc;border-radius:8px;font-size:16px;color:#94a3b8;cursor:pointer;flex-shrink:0;margin-left:6px">⋯</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid #f1f5f9">
+              <div style="display:flex;gap:4px">
+                <span style="background:#3b82f6;color:white;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px">Ops</span>
+                <span style="background:#fffbeb;color:#f59e0b;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;display:flex;align-items:center;gap:3px"><span style="width:5px;height:5px;background:#f59e0b;border-radius:50%;display:inline-block"></span>Moyenne</span>
+              </div>
+              <span style="font-size:10px;color:#94a3b8">5 mai</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Groupe catégorie IA -->
+        <div style="margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:6px;padding:0 2px;margin-bottom:6px">
+            <span style="width:8px;height:8px;border-radius:50%;background:#8b5cf6;display:inline-block"></span>
+            <span style="font-size:11px;font-weight:700;color:#8b5cf6;text-transform:uppercase;letter-spacing:.05em">IA</span>
+            <span style="font-size:10px;background:#f5f3ff;color:#8b5cf6;padding:1px 6px;border-radius:99px">2</span>
+          </div>
+          <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+              <span style="font-size:13px;font-weight:600;color:#134E4A;flex:1;line-height:1.3">Tester GPT-4o sur les résumés</span>
+              <button style="width:28px;height:28px;border:none;background:#f8fafc;border-radius:8px;font-size:16px;color:#94a3b8;cursor:pointer;flex-shrink:0;margin-left:6px">⋯</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid #f1f5f9">
+              <div style="display:flex;gap:4px">
+                <span style="background:#8b5cf6;color:white;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px">IA</span>
+                <span style="background:#fffbeb;color:#f59e0b;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;display:flex;align-items:center;gap:3px"><span style="width:5px;height:5px;background:#f59e0b;border-radius:50%;display:inline-block"></span>Moyenne</span>
+              </div>
+              <span style="font-size:10px;color:#94a3b8">5 mai</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bouton ajouter -->
+        <button style="width:100%;padding:12px;border:1.5px dashed #cbd5e1;border-radius:12px;background:none;color:#94a3b8;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          Ajouter une tâche
+        </button>
+      </div>
+
+      <!-- === EN COURS (masqué) === -->
+      <div id="col-in_progress" style="display:none">
+        <div style="background:#f0fdfa;border:1px solid #ccfbf1;border-radius:12px;padding:12px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <span style="font-size:13px;font-weight:600;color:#134E4A;flex:1;line-height:1.3">Intégration Supabase</span>
+            <button style="width:28px;height:28px;border:none;background:#e6fdf8;border-radius:8px;font-size:16px;color:#0d9488;cursor:pointer;flex-shrink:0;margin-left:6px">⋯</button>
+          </div>
+          <p style="font-size:11px;color:#64748b;line-height:1.5;margin:0 0 8px">Auth + PostgreSQL + RLS pour la persistance multi-appareils.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid #ccfbf1">
+            <div style="display:flex;gap:4px">
+              <span style="background:#8b5cf6;color:white;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px">IA</span>
+              <span style="background:#fef2f2;color:#ef4444;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;display:flex;align-items:center;gap:3px"><span style="width:5px;height:5px;background:#ef4444;border-radius:50%;display:inline-block"></span>Haute</span>
+            </div>
+            <span style="font-size:10px;color:#94a3b8">5 mai</span>
+          </div>
+        </div>
+        <button style="width:100%;padding:12px;border:1.5px dashed #99f6e4;border-radius:12px;background:none;color:#0d9488;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          Ajouter une tâche
+        </button>
+      </div>
+
+      <!-- === TERMINÉ (masqué) === -->
+      <div id="col-done" style="display:none">
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <span style="font-size:13px;font-weight:600;color:#134E4A;flex:1;line-height:1.3;text-decoration:line-through;opacity:.6">Configurer Vercel</span>
+            <button style="width:28px;height:28px;border:none;background:#fef3e2;border-radius:8px;font-size:16px;color:#f97316;cursor:pointer;flex-shrink:0;margin-left:6px">⋯</button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid #fed7aa">
+            <div style="display:flex;gap:4px">
+              <span style="background:#3b82f6;color:white;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px">Ops</span>
+              <span style="background:#f0fdf4;color:#16a34a;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;display:flex;align-items:center;gap:3px"><span style="width:5px;height:5px;background:#16a34a;border-radius:50%;display:inline-block"></span>Basse</span>
+            </div>
+            <span style="font-size:10px;color:#94a3b8">5 mai</span>
+          </div>
+        </div>
+        <button style="width:100%;padding:12px;border:1.5px dashed #fed7aa;border-radius:12px;background:none;color:#f97316;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          Ajouter une tâche
+        </button>
+      </div>
+
+    </div>
+
+  </div><!-- /phone frame -->
+</div>
+
+<p class="subtitle" style="text-align:center;margin-top:16px">Clique sur les onglets À faire / En cours / Terminé pour naviguer entre les colonnes.</p>
+
+<script>
+const COLORS = {
+  todo: { active: '#134E4A', border: '#134E4A', badge: '#f1f5f9', badgeText: '#64748b' },
+  in_progress: { active: '#0d9488', border: '#0d9488', badge: '#f0fdfa', badgeText: '#0f766e' },
+  done: { active: '#f97316', border: '#f97316', badge: '#fff7ed', badgeText: '#f97316' },
+}
+
+function switchTab(col) {
+  ['todo','in_progress','done'].forEach(id => {
+    const tab = document.getElementById('tab-' + id)
+    const content = document.getElementById('col-' + id)
+    const c = COLORS[id]
+    if (id === col) {
+      tab.style.color = c.active
+      tab.style.borderBottom = '2px solid ' + c.border
+      content.style.display = 'block'
+    } else {
+      tab.style.color = '#94a3b8'
+      tab.style.borderBottom = '2px solid transparent'
+      content.style.display = 'none'
+    }
+  })
+}
+</script>

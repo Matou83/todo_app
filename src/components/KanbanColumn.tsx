@@ -12,6 +12,7 @@ interface Props {
   onMoveTask: (id: string, status: Status) => void
   onDeleteTask: (id: string) => void
   onEditTask: (id: string) => void
+  onUpdateDescription: (id: string, description: string) => void
   allStatuses: Column[]
 }
 
@@ -51,7 +52,7 @@ const COLUMN_STYLE: Record<Status, {
 
 export default function KanbanColumn({
   column, tasks, categories, activeFilter,
-  onAddTask, onMoveTask, onDeleteTask, onEditTask, allStatuses,
+  onAddTask, onMoveTask, onDeleteTask, onEditTask, onUpdateDescription, allStatuses,
 }: Props) {
   const style = COLUMN_STYLE[column.id]
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
@@ -134,6 +135,7 @@ export default function KanbanColumn({
                 onMove={onMoveTask}
                 onDelete={onDeleteTask}
                 onEdit={onEditTask}
+                onUpdateDescription={onUpdateDescription}
                 allStatuses={allStatuses}
               />
             ))

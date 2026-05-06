@@ -149,6 +149,11 @@ export default function App() {
     if (!error) setTasks(prev => prev.map(t => t.id === id ? { ...t, status } : t))
   }
 
+  async function updateTaskDescription(id: string, description: string) {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, description } : t))
+    await supabase.from('tasks').update({ description }).eq('id', id)
+  }
+
   async function deleteTask(id: string) {
     const { error } = await supabase.from('tasks').delete().eq('id', id)
     if (!error) setTasks(prev => prev.filter(t => t.id !== id))
@@ -327,6 +332,7 @@ export default function App() {
               onMoveTask={moveTask}
               onDeleteTask={deleteTask}
               onEditTask={(id) => setModal({ open: true, status: tasks.find(t => t.id === id)?.status ?? activeTab, editId: id })}
+              onUpdateDescription={updateTaskDescription}
               allStatuses={COLUMNS}
             />
           </main>
@@ -345,6 +351,7 @@ export default function App() {
                 onMoveTask={moveTask}
                 onDeleteTask={deleteTask}
                 onEditTask={(id) => setModal({ open: true, status: tasks.find(t => t.id === id)?.status ?? col.id, editId: id })}
+                onUpdateDescription={updateTaskDescription}
                 allStatuses={COLUMNS}
               />
             ))}
@@ -357,6 +364,7 @@ export default function App() {
                 onMove={() => {}}
                 onDelete={() => {}}
                 onEdit={() => {}}
+                onUpdateDescription={() => {}}
                 allStatuses={COLUMNS}
                 isDragOverlay
               />

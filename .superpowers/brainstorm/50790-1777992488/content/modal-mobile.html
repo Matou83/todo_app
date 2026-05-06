@@ -1,0 +1,92 @@
+<h2>Formulaire de tâche sur mobile</h2>
+<p class="subtitle">Le modal actuel est centré et flottant. Sur mobile, deux approches possibles.</p>
+
+<div class="split" style="gap:24px;align-items:flex-start">
+
+  <!-- Option A : Bottom sheet -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)" style="flex:1;max-width:none">
+    <div class="card-image" style="background:#00000033;padding:0;position:relative;height:480px;overflow:hidden;border-radius:0">
+      <!-- Fond flouté -->
+      <div style="position:absolute;inset:0;background:rgba(15,23,42,0.5)"></div>
+      <!-- Board en fond -->
+      <div style="position:absolute;inset:0;background:#F0FDFA;padding:12px;opacity:.4">
+        <div style="background:white;height:40px;border-radius:10px;margin-bottom:8px"></div>
+        <div style="background:white;height:28px;border-radius:10px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:6px;border-bottom:2px solid #e2e8f0;padding-bottom:6px;margin-bottom:10px">
+          <div style="flex:1;height:28px;background:#134E4A;border-radius:6px"></div>
+          <div style="flex:1;height:28px;background:#e2e8f0;border-radius:6px"></div>
+          <div style="flex:1;height:28px;background:#e2e8f0;border-radius:6px"></div>
+        </div>
+        <div style="background:white;height:70px;border-radius:10px;margin-bottom:8px"></div>
+        <div style="background:white;height:70px;border-radius:10px"></div>
+      </div>
+      <!-- Bottom sheet -->
+      <div style="position:absolute;bottom:0;left:0;right:0;background:white;border-radius:20px 20px 0 0;padding:0 0 16px;font-family:system-ui">
+        <!-- Handle -->
+        <div style="display:flex;justify-content:center;padding:10px 0 4px">
+          <div style="width:36px;height:4px;background:#e2e8f0;border-radius:99px"></div>
+        </div>
+        <div style="padding:0 16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <span style="font-size:15px;font-weight:700;color:#134E4A">Nouvelle tâche</span>
+            <button style="width:28px;height:28px;border:none;background:#f1f5f9;border-radius:99px;font-size:14px;color:#64748b;cursor:pointer">✕</button>
+          </div>
+          <input placeholder="Titre de la tâche" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#134E4A;margin-bottom:8px;box-sizing:border-box">
+          <textarea placeholder="Description (optionnelle)" rows="2" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#134E4A;margin-bottom:8px;resize:none;box-sizing:border-box"></textarea>
+          <!-- Priorité + Catégorie en ligne -->
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <select style="flex:1;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;font-size:12px;color:#134E4A;background:white">
+              <option>Priorité — Moyenne</option>
+            </select>
+            <select style="flex:1;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;font-size:12px;color:#134E4A;background:white">
+              <option>Catégorie — Ops</option>
+            </select>
+          </div>
+          <button style="width:100%;background:#0d9488;color:white;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer">Créer la tâche</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Bottom sheet</h3>
+      <p>Le formulaire glisse depuis le bas. Plus naturel sur mobile, le clavier pousse le sheet vers le haut automatiquement. Pattern natif iOS/Android.</p>
+    </div>
+  </div>
+
+  <!-- Option B : Modal centré (inchangé) -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)" style="flex:1;max-width:none">
+    <div class="card-image" style="background:#F0FDFA;padding:0;position:relative;height:480px;overflow:hidden;border-radius:0">
+      <!-- Fond flouté -->
+      <div style="position:absolute;inset:0;background:rgba(15,23,42,0.5)"></div>
+      <!-- Board en fond -->
+      <div style="position:absolute;inset:0;background:#F0FDFA;padding:12px;opacity:.4">
+        <div style="background:white;height:40px;border-radius:10px;margin-bottom:8px"></div>
+        <div style="background:white;height:28px;border-radius:10px;margin-bottom:8px"></div>
+      </div>
+      <!-- Modal centré -->
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% - 32px);background:white;border-radius:16px;padding:16px;font-family:system-ui;box-shadow:0 20px 40px rgba(0,0,0,.3)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <span style="font-size:15px;font-weight:700;color:#134E4A">Nouvelle tâche</span>
+          <button style="width:28px;height:28px;border:none;background:#f1f5f9;border-radius:99px;font-size:14px;color:#64748b;cursor:pointer">✕</button>
+        </div>
+        <input placeholder="Titre de la tâche" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#134E4A;margin-bottom:8px;box-sizing:border-box">
+        <textarea placeholder="Description (optionnelle)" rows="2" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#134E4A;margin-bottom:8px;resize:none;box-sizing:border-box"></textarea>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <select style="flex:1;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;font-size:12px;color:#134E4A;background:white">
+            <option>Priorité</option>
+          </select>
+          <select style="flex:1;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;font-size:12px;color:#134E4A;background:white">
+            <option>Catégorie</option>
+          </select>
+        </div>
+        <button style="width:100%;background:#0d9488;color:white;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer">Créer la tâche</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Modal centré (actuel)</h3>
+      <p>Le modal actuel adapté à la largeur mobile. Moins de changements à coder, mais l'ouverture du clavier peut faire scroller le modal hors de l'écran.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px">💡 Ma recommandation : <strong>A (bottom sheet)</strong> — bien plus agréable sur mobile, et le clavier virtuel ne le cache jamais.</p>

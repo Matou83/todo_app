@@ -1,0 +1,111 @@
+<h2>Layout du board sur mobile</h2>
+<p class="subtitle">Le board actuel a 3 colonnes côte à côte (largeur fixe 288px) — inutilisable sur téléphone. Quelle approche préfères-tu ?</p>
+
+<div class="cards">
+
+  <!-- Option A : Tab navigation -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;padding:16px;font-family:system-ui">
+      <div style="display:flex;gap:4px;margin-bottom:10px">
+        <div style="flex:1;background:#134E4A;color:white;font-size:11px;font-weight:700;text-align:center;padding:6px 4px;border-radius:8px">À faire</div>
+        <div style="flex:1;background:#e2e8f0;color:#64748b;font-size:11px;font-weight:700;text-align:center;padding:6px 4px;border-radius:8px">En cours</div>
+        <div style="flex:1;background:#e2e8f0;color:#64748b;font-size:11px;font-weight:700;text-align:center;padding:6px 4px;border-radius:8px">Terminé</div>
+      </div>
+      <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:10px;margin-bottom:6px">
+        <div style="font-size:11px;font-weight:600;color:#134E4A">Préparer la réunion</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:4px">Head of · Haute</div>
+      </div>
+      <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:10px;margin-bottom:6px">
+        <div style="font-size:11px;font-weight:600;color:#134E4A">Revoir les KPIs</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:4px">Ops · Moyenne</div>
+      </div>
+      <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:10px">
+        <div style="font-size:11px;font-weight:600;color:#134E4A">Envoyer le rapport</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:4px">Ops · Basse</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Onglets</h3>
+      <p>3 onglets en haut, une seule colonne visible à la fois. Simple, familier, toute la largeur disponible pour les cartes.</p>
+    </div>
+  </div>
+
+  <!-- Option B : Scroll horizontal (pleine largeur) -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;padding:16px;font-family:system-ui;overflow:hidden">
+      <div style="display:flex;gap:8px;overflow:hidden">
+        <div style="min-width:calc(100% - 24px);background:white;border:1px solid #e2e8f0;border-radius:12px;padding:10px">
+          <div style="font-size:11px;font-weight:700;color:#334155;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+            <span style="width:6px;height:6px;border-radius:50%;background:#94a3b8;display:inline-block"></span>
+            À faire <span style="background:#f1f5f9;color:#64748b;font-size:10px;padding:1px 6px;border-radius:99px;margin-left:4px">3</span>
+          </div>
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;margin-bottom:5px">
+            <div style="font-size:10px;font-weight:600;color:#134E4A">Préparer la réunion</div>
+          </div>
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px">
+            <div style="font-size:10px;font-weight:600;color:#134E4A">Revoir les KPIs</div>
+          </div>
+        </div>
+        <div style="min-width:24px;background:linear-gradient(to right,transparent,#f8fafc);position:relative">
+          <div style="position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:14px;color:#94a3b8">›</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:center;gap:4px;margin-top:8px">
+        <div style="width:16px;height:4px;border-radius:2px;background:#134E4A"></div>
+        <div style="width:4px;height:4px;border-radius:2px;background:#cbd5e1"></div>
+        <div style="width:4px;height:4px;border-radius:2px;background:#cbd5e1"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Swipe pleine largeur</h3>
+      <p>Chaque colonne occupe toute la largeur de l'écran. On swipe pour passer d'une colonne à l'autre. Indicateur de pagination.</p>
+    </div>
+  </div>
+
+  <!-- Option C : Stack vertical -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;padding:16px;font-family:system-ui">
+      <!-- À faire -->
+      <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:8px">
+        <div style="padding:8px 10px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:11px;font-weight:700;color:#334155;display:flex;align-items:center;gap:5px">
+            <span style="width:5px;height:5px;border-radius:50%;background:#94a3b8;display:inline-block"></span>
+            À faire
+          </div>
+          <span style="font-size:10px;background:#f1f5f9;color:#64748b;padding:1px 6px;border-radius:99px">3 ›</span>
+        </div>
+        <div style="padding:0 8px 8px;display:flex;gap:6px;overflow:hidden">
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px;font-size:10px;color:#134E4A;font-weight:600;flex:1">Préparer…</div>
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px;font-size:10px;color:#134E4A;font-weight:600;flex:1">Revoir…</div>
+        </div>
+      </div>
+      <!-- En cours -->
+      <div style="background:#f0fdfa;border:1px solid #ccfbf1;border-radius:12px;margin-bottom:8px">
+        <div style="padding:8px 10px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:11px;font-weight:700;color:#0f766e;display:flex;align-items:center;gap:5px">
+            <span style="width:5px;height:5px;border-radius:50%;background:#0d9488;display:inline-block"></span>
+            En cours
+          </div>
+          <span style="font-size:10px;background:#ccfbf1;color:#0f766e;padding:1px 6px;border-radius:99px">1 ›</span>
+        </div>
+      </div>
+      <!-- Terminé -->
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px">
+        <div style="padding:8px 10px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:11px;font-weight:700;color:#9a3412;display:flex;align-items:center;gap:5px">
+            <span style="width:5px;height:5px;border-radius:50%;background:#f97316;display:inline-block"></span>
+            Terminé
+          </div>
+          <span style="font-size:10px;background:#fed7aa;color:#9a3412;padding:1px 6px;border-radius:99px">2 ›</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Colonnes empilées</h3>
+      <p>Les 3 colonnes l'une sous l'autre. Chacune affiche un aperçu des cartes (scroll horizontal dans la colonne) et peut se développer.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px">💡 Ma recommandation : <strong>A (onglets)</strong> — la plus lisible et la plus simple à implémenter, sans casser le DnD existant.</p>

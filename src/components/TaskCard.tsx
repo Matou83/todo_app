@@ -3,12 +3,14 @@ import { createPortal } from 'react-dom'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { type Task, type Column, type Status, type Priority, type Category } from '../types'
+import DescriptionRenderer from './DescriptionRenderer'
 
 interface Props {
   task: Task
   onMove: (id: string, status: Status) => void
   onDelete: (id: string) => void
   onEdit: (id: string) => void
+  onUpdateDescription: (id: string, description: string) => void
   allStatuses: Column[]
   category?: Category
   isDragOverlay?: boolean
@@ -24,7 +26,7 @@ function formatDate(ts: number): string {
   return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(ts))
 }
 
-export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, category, isDragOverlay }: Props) {
+export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescription, allStatuses, category, isDragOverlay }: Props) {
   const [showMenu, setShowMenu] = useState(false)
   const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; right: number } | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -156,7 +158,10 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
 
       {/* Description */}
       {task.description && (
-        <p className="text-xs text-slate-500 mt-1.5 leading-relaxed line-clamp-2">{task.description}</p>
+        <DescriptionRenderer
+          html={task.description}
+          onToggleCheckbox={isDragOverlay ? undefined : newHtml => onUpdateDescription(task.id, newHtml)}
+        />
       )}
 
       {/* Footer: category + priority + date */}
