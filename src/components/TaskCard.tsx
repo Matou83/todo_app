@@ -26,6 +26,22 @@ function formatDate(ts: number): string {
   return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(ts))
 }
 
+function getDueDateBadge(dueDate: number): { label: string; className: string } {
+  const now = new Date()
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const dueMidnight = new Date(new Date(dueDate).getFullYear(), new Date(dueDate).getMonth(), new Date(dueDate).getDate()).getTime()
+  const days = Math.round((dueMidnight - todayMidnight) / 86400000)
+
+  if (days < 0)  return { label: 'En retard', className: 'bg-red-50 text-red-600' }
+  if (days === 0) return { label: 'Aujourd\'hui', className: 'bg-red-50 text-red-600' }
+  if (days === 1) return { label: 'Demain', className: 'bg-orange-50 text-orange-600' }
+  if (days <= 3)  return { label: `Dans ${days} jours`, className: 'bg-orange-50 text-orange-600' }
+  return {
+    label: new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(dueDate)),
+    className: 'bg-teal-50 text-teal-600',
+  }
+}
+
 export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescription, allStatuses, category, isDragOverlay }: Props) {
   const [showMenu, setShowMenu] = useState(false)
   const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; right: number } | null>(null)
@@ -180,7 +196,18 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
             {priority.label}
           </span>
         </div>
-        <span className="text-xs text-slate-400 font-medium shrink-0">{formatDate(task.createdAt)}</span>
+        {task.dueDate && (() => {
+          const badge = getDueDateBadge(task.dueDate!)
+          return (
+            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${badge.className}`}>
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path strokeLinecap="round" d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+              {badge.label}
+            </span>
+          )
+        })()}
       </div>
     </div>
   )
