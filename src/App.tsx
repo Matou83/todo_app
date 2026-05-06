@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useIsMobile } from './hooks/useIsMobile'
+import { useSwipe } from './hooks/useSwipe'
 import { type Session } from '@supabase/supabase-js'
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
@@ -72,6 +73,11 @@ export default function App() {
     setEnv(next)
     setActiveFilter(null)
   }
+
+  const swipeRef = useSwipe(
+    () => switchEnv('perso'),
+    () => switchEnv('pro'),
+  )
 
   const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   const sensors = useSensors(...(isMobile ? [] : [pointerSensor]))
@@ -311,7 +317,7 @@ export default function App() {
             })}
           </div>
           {/* Active column */}
-          <main className="p-4">
+          <main ref={swipeRef} className="p-4">
             <KanbanColumn
               column={COLUMNS.find(c => c.id === activeTab)!}
               tasks={envTasks.filter(t => t.status === activeTab)}
