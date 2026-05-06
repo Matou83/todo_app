@@ -35,15 +35,60 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
   )
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Snapshot of original values for auto-save comparison (edit mode only)
+  const snapshot = useRef({
+    title: task?.title ?? '',
+    description: task?.description ?? '',
+    status: (task?.status ?? defaultStatus) as Status,
+    priority: (task?.priority ?? 'medium') as Priority,
+    categoryId: task?.categoryId ?? DEFAULT_CATEGORIES[0].id,
+    dueDate: task?.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : '',
+  })
+
+  function hasChanges(): boolean {
+    if (!isEdit) return false
+    const s = snapshot.current
+    return (
+      title !== s.title ||
+      description !== s.description ||
+      status !== s.status ||
+      priority !== s.priority ||
+      categoryId !== s.categoryId ||
+      dueDate !== s.dueDate
+    )
+  }
+
   useEffect(() => { inputRef.current?.focus() }, [])
+
+  async function handleClose() {
+    if (isEdit && hasChanges()) {
+      setSaving(true)
+      setSaveError('')
+      const dueDateTs = dueDate ? new Date(dueDate).getTime() : undefined
+      const ok = await onSave(title.trim(), description.trim(), status, priority, categoryId, task!.id, dueDateTs)
+      setSaving(false)
+      if (!ok) { setSaveError('Erreur lors de la sauvegarde.'); return }
+    }
+    onClose()
+  }
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') handleClose()
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  }, [title, description, status, priority, categoryId, dueDate])
+
+  useEffect(() => {
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      if (isEdit && hasChanges()) {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [title, description, status, priority, categoryId, dueDate])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -73,7 +118,7 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
   return (
     <div
       className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4 animate-fade-in"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      onClick={e => { if (e.target === e.currentTarget) handleClose() }}
       role="dialog"
       aria-modal="true"
       aria-label={isEdit ? 'Modifier la tâche' : 'Nouvelle tâche'}
@@ -90,7 +135,7 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
             {isEdit ? 'Modifier la tâche' : 'Nouvelle tâche'}
           </h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             aria-label="Fermer"
           >
@@ -260,13 +305,18 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
             >
               Annuler
             </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-5 py-2.5 text-sm font-semibold bg-[#0D9488] text-white rounded-xl hover:bg-teal-700 active:scale-95 transition-all duration-150 shadow-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {saving ? 'Sauvegarde…' : isEdit ? 'Enregistrer' : 'Ajouter'}
-            </button>
+            {!isEdit && (
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-5 py-2.5 text-sm font-semibold bg-[#0D9488] text-white rounded-xl hover:bg-teal-700 active:scale-95 transition-all duration-150 shadow-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {saving ? 'Sauvegarde…' : 'Ajouter'}
+              </button>
+            )}
+            {isEdit && saving && (
+              <span className="px-4 py-2.5 text-sm text-slate-400">Sauvegarde…</span>
+            )}
           </div>
         </form>
       </div>
