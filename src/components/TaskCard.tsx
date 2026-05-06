@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { type Task, type Column, type Status, type Priority, type Category } from '../types'
@@ -25,7 +26,7 @@ function formatDate(ts: number): string {
 
 export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, category, isDragOverlay }: Props) {
   const [showMenu, setShowMenu] = useState(false)
-  const [menuUp, setMenuUp] = useState(false)
+  const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; right: number } | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuBtnRef = useRef<HTMLButtonElement>(null)
   const priority = PRIORITY_STYLE[task.priority ?? 'medium']
@@ -78,7 +79,12 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
                 e.stopPropagation()
                 if (!showMenu && menuBtnRef.current) {
                   const rect = menuBtnRef.current.getBoundingClientRect()
-                  setMenuUp(window.innerHeight - rect.bottom < 220)
+                  const spaceBelow = window.innerHeight - rect.bottom
+                  if (spaceBelow < 220) {
+                    setMenuPos({ bottom: window.innerHeight - rect.top + 4, right: window.innerWidth - rect.right })
+                  } else {
+                    setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+                  }
                 }
                 setShowMenu(v => !v)
               }}
@@ -93,8 +99,12 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
               </svg>
             </button>
 
-            {showMenu && (
-              <div className={`absolute right-0 z-30 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 min-w-44 animate-scale-in ${menuUp ? 'bottom-9' : 'top-9'}`}>
+            {showMenu && menuPos && createPortal(
+              <div
+                ref={menuRef}
+                style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, right: menuPos.right, zIndex: 9999 }}
+                className="bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 min-w-44 animate-scale-in"
+              >
                 <button
                   onClick={() => { onEdit(task.id); setShowMenu(false) }}
                   className="flex items-center gap-2.5 w-full text-left px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
@@ -136,7 +146,8 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
                     Supprimer
                   </button>
                 </div>
-              </div>
+              </div>,
+              document.body
             )}
           </div>
         )}
