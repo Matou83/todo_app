@@ -25,7 +25,9 @@ function formatDate(ts: number): string {
 
 export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, category, isDragOverlay }: Props) {
   const [showMenu, setShowMenu] = useState(false)
+  const [menuUp, setMenuUp] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const menuBtnRef = useRef<HTMLButtonElement>(null)
   const priority = PRIORITY_STYLE[task.priority ?? 'medium']
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -71,7 +73,15 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
         {!isDragOverlay && (
           <div ref={menuRef} className="relative shrink-0">
             <button
-              onClick={e => { e.stopPropagation(); setShowMenu(v => !v) }}
+              ref={menuBtnRef}
+              onClick={e => {
+                e.stopPropagation()
+                if (!showMenu && menuBtnRef.current) {
+                  const rect = menuBtnRef.current.getBoundingClientRect()
+                  setMenuUp(window.innerHeight - rect.bottom < 220)
+                }
+                setShowMenu(v => !v)
+              }}
               className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100 transition-all duration-150 cursor-pointer"
               aria-label="Options de la tâche"
               aria-expanded={showMenu}
@@ -84,7 +94,7 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, allStatuses, 
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 top-9 z-30 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 min-w-44 animate-scale-in">
+              <div className={`absolute right-0 z-30 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 min-w-44 animate-scale-in ${menuUp ? 'bottom-9' : 'top-9'}`}>
                 <button
                   onClick={() => { onEdit(task.id); setShowMenu(false) }}
                   className="flex items-center gap-2.5 w-full text-left px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
