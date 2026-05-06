@@ -75,7 +75,6 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
       setSaveError('')
       const dueDateTs = dueDate ? new Date(dueDate).getTime() : undefined
       const ok = await onSave(title.trim(), description.trim(), status, priority, categoryId, task?.id, dueDateTs)
-      if (!isMounted.current) return
       setSaving(false)
       if (!ok) { setSaveError('Erreur lors de la sauvegarde.'); return }
     }
@@ -328,8 +327,18 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
                 {saving ? 'Sauvegarde…' : 'Ajouter'}
               </button>
             )}
+            {isEdit && (
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={saving}
+                className="sm:hidden px-5 py-2.5 text-sm font-semibold bg-[#0D9488] text-white rounded-xl hover:bg-teal-700 active:scale-95 transition-all duration-150 shadow-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {saving ? 'Sauvegarde…' : 'Enregistrer'}
+              </button>
+            )}
             {isEdit && saving && (
-              <span className="px-4 py-2.5 text-sm text-slate-400">Sauvegarde…</span>
+              <span className="hidden sm:block px-4 py-2.5 text-sm text-slate-400">Sauvegarde…</span>
             )}
           </div>
         </form>
