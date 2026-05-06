@@ -59,6 +59,17 @@ export default function App() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [customCategories, setCustomCategories] = useState<Category[]>([])
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
+  const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set())
+
+  function toggleHideCategory(id: string) {
+    setHiddenCategories(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   const [modal, setModal] = useState<ModalState>({ open: false })
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
   const [env, setEnv] = useState<Env>('pro')
@@ -319,6 +330,8 @@ export default function App() {
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
         onAddCategory={addCategory}
+        hiddenCategories={hiddenCategories}
+        onToggleHideCategory={toggleHideCategory}
       />
 
       {/* Board */}
@@ -364,6 +377,7 @@ export default function App() {
               onEditTask={(id) => setModal({ open: true, status: tasks.find(t => t.id === id)?.status ?? activeTab, editId: id })}
               onUpdateDescription={updateTaskDescription}
               allStatuses={COLUMNS}
+              hiddenCategories={hiddenCategories}
             />
           </main>
         </>
@@ -383,6 +397,7 @@ export default function App() {
                 onEditTask={(id) => setModal({ open: true, status: tasks.find(t => t.id === id)?.status ?? col.id, editId: id })}
                 onUpdateDescription={updateTaskDescription}
                 allStatuses={COLUMNS}
+                hiddenCategories={hiddenCategories}
               />
             ))}
           </main>
