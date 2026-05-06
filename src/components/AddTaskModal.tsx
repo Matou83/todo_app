@@ -45,6 +45,9 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
     dueDate: task?.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : '',
   })
 
+  const isMounted = useRef(true)
+  useEffect(() => () => { isMounted.current = false }, [])
+
   function hasChanges(): boolean {
     if (!isEdit) return false
     const s = snapshot.current
@@ -58,37 +61,47 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
     )
   }
 
+  const hasChangesRef = useRef(false)
+  hasChangesRef.current = hasChanges()
+
   useEffect(() => { inputRef.current?.focus() }, [])
 
+  const handleCloseRef = useRef<() => Promise<void>>(async () => {})
+
   async function handleClose() {
+    if (saving) return
     if (isEdit && hasChanges()) {
       setSaving(true)
       setSaveError('')
       const dueDateTs = dueDate ? new Date(dueDate).getTime() : undefined
-      const ok = await onSave(title.trim(), description.trim(), status, priority, categoryId, task!.id, dueDateTs)
+      const ok = await onSave(title.trim(), description.trim(), status, priority, categoryId, task?.id, dueDateTs)
+      if (!isMounted.current) return
       setSaving(false)
       if (!ok) { setSaveError('Erreur lors de la sauvegarde.'); return }
     }
     onClose()
   }
 
+  handleCloseRef.current = handleClose
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') handleClose()
+      if (e.key === 'Escape') handleCloseRef.current()
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [title, description, status, priority, categoryId, dueDate])
+  }, [])
 
   useEffect(() => {
     function onBeforeUnload(e: BeforeUnloadEvent) {
-      if (isEdit && hasChanges()) {
+      if (isEdit && hasChangesRef.current) {
         e.preventDefault()
+        e.returnValue = true
       }
     }
     window.addEventListener('beforeunload', onBeforeUnload)
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
-  }, [title, description, status, priority, categoryId, dueDate])
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
