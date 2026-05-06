@@ -18,6 +18,7 @@ import './index.css'
 type TaskRow = {
   id: string; title: string; description: string | null
   status: string; priority: string; category_id: string; created_at: string
+  due_date: string | null
 }
 
 type CategoryRow = { id: string; label: string; color: string }
@@ -31,6 +32,7 @@ function mapTask(row: TaskRow): Task {
     priority: row.priority as Priority,
     categoryId: row.category_id,
     createdAt: new Date(row.created_at).getTime(),
+    dueDate: row.due_date ? new Date(row.due_date).getTime() : undefined,
   }
 }
 

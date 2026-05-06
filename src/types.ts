@@ -15,6 +15,7 @@ export interface Task {
   priority: Priority
   categoryId: string
   createdAt: number
+  dueDate?: number
 }
 
 export interface Column {
