@@ -1,4 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
 import { useIsMobile } from './hooks/useIsMobile'
 import { useSwipe } from './hooks/useSwipe'
 import { type Session } from '@supabase/supabase-js'
@@ -56,6 +61,8 @@ const ENV_CONFIG: Record<Env, { label: string; icon: string; bg: string; text: s
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const installPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
+  const [canInstall, setCanInstall] = useState(false)
   const [tasks, setTasks] = useState<Task[]>([])
   const [customCategories, setCustomCategories] = useState<Category[]>([])
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
@@ -100,6 +107,26 @@ export default function App() {
   function switchEnv(next: Env) {
     setEnv(next)
     setActiveFilter(null)
+  }
+
+  useEffect(() => {
+    function handler(e: Event) {
+      e.preventDefault()
+      installPromptRef.current = e as BeforeInstallPromptEvent
+      setCanInstall(true)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+
+  async function handleInstall() {
+    if (!installPromptRef.current) return
+    await installPromptRef.current.prompt()
+    const { outcome } = await installPromptRef.current.userChoice
+    if (outcome === 'accepted') {
+      installPromptRef.current = null
+      setCanInstall(false)
+    }
   }
 
   const swipeRef = useSwipe(
@@ -296,6 +323,18 @@ export default function App() {
               </button>
             ))}
           </div>
+          {canInstall && (
+            <button
+              onClick={handleInstall}
+              className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 border border-teal-300 px-3 py-2 rounded-xl hover:bg-teal-50 active:scale-95 transition-all duration-150 cursor-pointer"
+              aria-label="Installer l'application"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m-4-4l4 4 4-4" />
+              </svg>
+              <span className="hidden sm:inline">Installer</span>
+            </button>
+          )}
           <button
             onClick={() => setModal({ open: true, status: isMobile ? activeTab : 'todo' })}
             className="flex items-center gap-2 bg-[#F97316] text-white text-sm font-semibold px-3 sm:px-4 py-2.5 rounded-xl hover:bg-orange-500 active:scale-95 transition-all duration-150 shadow-sm cursor-pointer"
