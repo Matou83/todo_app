@@ -110,6 +110,7 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
     setSaveError('')
     const dueDateTs = dueDate ? new Date(dueDate).getTime() : undefined
     const ok = await onSave(title.trim(), description.trim(), status, priority, categoryId, task?.id, dueDateTs)
+    if (!isMounted.current) return
     setSaving(false)
     if (ok) onClose()
     else setSaveError('Erreur lors de la sauvegarde. Réessayez.')
