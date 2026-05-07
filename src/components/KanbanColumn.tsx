@@ -15,6 +15,7 @@ interface Props {
   onUpdateDescription: (id: string, description: string) => void
   allStatuses: Column[]
   hiddenCategories: Set<string>
+  searchQuery?: string
 }
 
 const COLUMN_STYLE: Record<Status, {
@@ -52,7 +53,7 @@ const COLUMN_STYLE: Record<Status, {
 }
 
 export default function KanbanColumn({
-  column, tasks, categories, activeFilter, hiddenCategories,
+  column, tasks, categories, activeFilter, hiddenCategories, searchQuery,
   onAddTask, onMoveTask, onDeleteTask, onEditTask, onUpdateDescription, allStatuses,
 }: Props) {
   const style = COLUMN_STYLE[column.id]
@@ -61,6 +62,10 @@ export default function KanbanColumn({
 
   // Filter tasks by active category filter
   const visibleTasks = activeFilter ? tasks.filter(t => t.categoryId === activeFilter) : tasks
+
+  // Count matching tasks for the badge when searching
+  const q = searchQuery?.trim().toLowerCase() ?? ''
+  const matchingCount = q ? visibleTasks.filter(t => t.title.toLowerCase().includes(q)).length : visibleTasks.length
 
   // Group visible tasks by categoryId, preserving category order
   const groups = categories
@@ -112,7 +117,7 @@ export default function KanbanColumn({
               </button>
             )}
             <span className={`text-xs font-semibold rounded-full px-2 py-0.5 ${style.count}`}>
-              {visibleTasks.length}
+              {matchingCount}
             </span>
           </div>
         </div>
@@ -139,6 +144,7 @@ export default function KanbanColumn({
                 onUpdateDescription={onUpdateDescription}
                 allStatuses={allStatuses}
                 isHidden={hiddenCategories.has(category.id)}
+                searchQuery={searchQuery}
               />
             ))
           )}

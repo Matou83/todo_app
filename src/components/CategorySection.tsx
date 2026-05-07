@@ -12,6 +12,7 @@ interface Props {
   onUpdateDescription: (id: string, description: string) => void
   allStatuses: Column[]
   isHidden?: boolean
+  searchQuery?: string
 }
 
 export default function CategorySection({
@@ -25,6 +26,7 @@ export default function CategorySection({
   onUpdateDescription,
   allStatuses,
   isHidden,
+  searchQuery,
 }: Props) {
   // Couleur avec opacité légère pour le fond du header
   const hexToRgba = (hex: string, alpha: number) => {
@@ -68,6 +70,7 @@ export default function CategorySection({
           onUpdateDescription={onUpdateDescription}
           allStatuses={allStatuses}
           isHidden={isHidden}
+          searchQuery={searchQuery}
         />
       ))}
     </div>
