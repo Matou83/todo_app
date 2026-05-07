@@ -88,6 +88,17 @@ export default function App() {
     if (searchOpen) searchInputRef.current?.focus()
   }, [searchOpen])
 
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        searchOpen ? closeSearch() : openSearch()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [searchOpen])
+
   const [modal, setModal] = useState<ModalState>({ open: false })
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
   const [env, setEnv] = useState<Env>('pro')
