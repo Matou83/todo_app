@@ -320,15 +320,21 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F0FDFA] font-sans">
       {/* Header */}
-      <header className="bg-white border-b border-teal-100 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
-        <div className="flex items-center gap-3 flex-1 min-w-0 mr-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-teal-400 to-teal-700 rounded-xl flex items-center justify-center shadow-sm shrink-0">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
-          </div>
-          {searchOpen ? (
-            <div className="flex items-center gap-2 flex-1 min-w-0 bg-slate-50 border-2 border-teal-400 rounded-xl px-3 py-2">
+      <header className="bg-white border-b border-teal-100 px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3 sticky top-0 z-20 shadow-sm">
+
+        {/* Mobile: full-width search mode */}
+        {searchOpen && (
+          <div className="sm:hidden flex items-center gap-2 w-full">
+            <button
+              onClick={closeSearch}
+              className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+              aria-label="Fermer la recherche"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            <div className="flex items-center gap-2 flex-1 bg-slate-50 border-2 border-teal-400 rounded-xl px-3 py-2">
               <svg className="w-4 h-4 text-teal-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
                 <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" d="M21 21l-4.35-4.35"/>
               </svg>
@@ -342,7 +348,39 @@ export default function App() {
                 className="flex-1 min-w-0 bg-transparent text-sm text-[#134E4A] placeholder-slate-400 outline-none"
                 aria-label="Rechercher une tâche"
               />
-              <span className="text-[10px] text-slate-400 bg-slate-200 rounded px-1.5 py-0.5 shrink-0 font-mono">Esc</span>
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="text-slate-400 cursor-pointer shrink-0">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Left: logo + title / desktop search */}
+        <div className={`${searchOpen ? 'hidden sm:flex' : 'flex'} items-center gap-3 flex-1 min-w-0`}>
+          <div className="w-9 h-9 bg-gradient-to-br from-teal-400 to-teal-700 rounded-xl flex items-center justify-center shadow-sm shrink-0">
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+          </div>
+          {searchOpen ? (
+            /* Desktop: inline search in title area */
+            <div className="hidden sm:flex items-center gap-2 flex-1 min-w-0 bg-slate-50 border-2 border-teal-400 rounded-xl px-3 py-2">
+              <svg className="w-4 h-4 text-teal-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" d="M21 21l-4.35-4.35"/>
+              </svg>
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Escape') closeSearch() }}
+                placeholder="Chercher une tâche…"
+                className="flex-1 min-w-0 bg-transparent text-sm text-[#134E4A] placeholder-slate-400 outline-none"
+                aria-label="Rechercher une tâche"
+              />
+              <span className="text-[10px] text-slate-400 bg-slate-200 rounded px-1.5 py-0.5 shrink-0 font-mono hidden sm:inline">Esc</span>
             </div>
           ) : (
             <div>
@@ -353,7 +391,9 @@ export default function App() {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+
+        {/* Right: actions (hidden on mobile when search is open) */}
+        <div className={`${searchOpen ? 'hidden sm:flex' : 'flex'} items-center gap-2 sm:gap-3 shrink-0`}>
           {/* Search button */}
           <button
             onClick={searchOpen ? closeSearch : openSearch}
@@ -414,7 +454,7 @@ export default function App() {
           </button>
           <button
             onClick={() => supabase.auth.signOut()}
-            className="text-sm font-medium text-slate-500 hover:text-slate-700 px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+            className="hidden sm:block text-sm font-medium text-slate-500 hover:text-slate-700 px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
           >
             Déconnexion
           </button>
