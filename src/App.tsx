@@ -236,7 +236,7 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      if (session) { loadHiddenCategories(session.user.id); fetchData() }
+      if (session) { loadHiddenCategories(session.user.id); fetchData(session.user.id) }
       else setLoading(false)
     })
 
@@ -244,7 +244,7 @@ export default function App() {
       if (event === 'SIGNED_IN') {
         setSession(session)
         if (session) loadHiddenCategories(session.user.id)
-        fetchData()
+        fetchData(session!.user.id)
       }
       if (event === 'SIGNED_OUT') {
         setSession(null)
@@ -257,7 +257,7 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function fetchData() {
+  async function fetchData(userId: string) {
     setLoading(true)
     const [{ data: tasksData }, { data: catsData }] = await Promise.all([
       supabase.from('tasks').select('*').order('created_at', { ascending: true }),
@@ -269,7 +269,7 @@ export default function App() {
     let cats = (catsData ?? []).map(r => mapCategory(r as CategoryRow))
     if (cats.length === 0) {
       const { data: seeded } = await supabase.from('categories').insert(
-        DEFAULT_CATEGORIES.map(c => ({ id: c.id, label: c.label, color: c.color, user_id: session!.user.id }))
+        DEFAULT_CATEGORIES.map(c => ({ id: c.id, label: c.label, color: c.color, user_id: userId }))
       ).select()
       cats = (seeded ?? []).map(r => mapCategory(r as CategoryRow))
     }
