@@ -45,6 +45,7 @@ function getDueDateBadge(dueDate: number): { label: string; className: string } 
 
 export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescription, allStatuses, category, isDragOverlay, isHidden, searchQuery, isOverdueDimmed }: Props) {
   const [showMenu, setShowMenu] = useState(false)
+  const [completing, setCompleting] = useState(false)
   const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; right: number } | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuWrapperRef = useRef<HTMLDivElement>(null)
@@ -81,6 +82,7 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
   }, [showMenu])
 
   function handleCardClick() {
+    if (completing) return
     if (isDragOverlay) return
     if (wasDragging.current) { wasDragging.current = false; return }
     // Ignore ghost clicks generated after a menu action (mobile)
@@ -96,7 +98,13 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
   return (
     <div
       ref={setNodeRef}
-      style={dragStyle}
+      style={{
+        ...dragStyle,
+        ...(completing ? {
+          animation: 'greenFlash 0.25s ease-out, springSlideOut 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.3s forwards',
+          pointerEvents: 'none' as const,
+        } : {}),
+      }}
       {...(!isDragOverlay ? listeners : {})}
       {...(!isDragOverlay ? attributes : {})}
       onClick={handleCardClick}
@@ -248,11 +256,28 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
           )}
           {!isDragOverlay && task.status !== 'done' && (
             <button
-              onClick={e => { e.stopPropagation(); onMove(task.id, 'done') }}
-              className="w-7 h-7 rounded-full border-2 border-slate-300 flex items-center justify-center text-slate-300 hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-50 hover:scale-110 transition-all duration-150 cursor-pointer shrink-0"
+              onClick={e => {
+                e.stopPropagation()
+                if (completing) return
+                setCompleting(true)
+                setTimeout(() => onMove(task.id, 'done'), 800)
+              }}
+              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0 ${
+                completing
+                  ? 'border-emerald-500 bg-emerald-500 text-white scale-115'
+                  : 'border-slate-300 text-slate-300 hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-50 hover:scale-110'
+              }`}
               aria-label="Marquer comme terminée"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true">
+              <svg
+                className="w-3.5 h-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={3}
+                aria-hidden="true"
+                style={completing ? { strokeDasharray: 24, strokeDashoffset: 0, animation: 'drawCheck 0.2s ease-out' } : undefined}
+              >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </button>
