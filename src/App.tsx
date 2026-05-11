@@ -647,6 +647,16 @@ export default function App() {
         </div>
       </header>
 
+      {/* Progress bar */}
+      {total > 0 && (
+        <div className="h-0.5 bg-slate-100">
+          <div
+            className="h-full bg-gradient-to-r from-teal-400 to-emerald-500 transition-all duration-500 ease-out"
+            style={{ width: `${Math.round((done / total) * 100)}%` }}
+          />
+        </div>
+      )}
+
       {/* Notification panel */}
       {notifOpen && notifPanelPos && createPortal(
         <div
