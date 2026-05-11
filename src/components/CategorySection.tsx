@@ -45,17 +45,17 @@ export default function CategorySection({
       {/* Section header */}
       <button
         onClick={onToggle}
-        className="flex items-center justify-between rounded-lg px-3 py-2 transition-colors duration-150 cursor-pointer w-full text-left"
+        className="flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors duration-150 cursor-pointer w-full text-left"
         style={{ backgroundColor: hexToRgba(category.color, 0.1), borderLeft: `3px solid ${category.color}` }}
         aria-expanded={!collapsed}
         aria-label={`${collapsed ? 'Déplier' : 'Replier'} la catégorie ${category.label}`}
       >
         <div className="flex items-center gap-2">
           <span className="text-xs" aria-hidden="true">{collapsed ? '▶' : '▼'}</span>
-          <span className="text-xs font-bold" style={{ color: category.color, ...(isHidden ? { filter: 'blur(4px)', userSelect: 'none' } : {}) }}>{category.label}</span>
+          <span className="text-[13px] font-bold" style={{ color: category.color, ...(isHidden ? { filter: 'blur(4px)', userSelect: 'none' } : {}) }}>{category.label}</span>
         </div>
         <span
-          className="text-xs font-semibold rounded-full px-2 py-0.5"
+          className="text-[11px] font-bold rounded-full px-2 py-0.5"
           style={{ backgroundColor: hexToRgba(category.color, 0.15), color: category.color }}
         >
           {tasks.length}
