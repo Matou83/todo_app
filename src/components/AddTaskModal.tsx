@@ -184,7 +184,7 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-5">
           {/* Title */}
           <div>
             <label htmlFor="task-title" className="block text-sm font-semibold text-[#134E4A] mb-1.5">
@@ -214,7 +214,7 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
           </div>
 
           {/* Subtasks */}
-          <div>
+          <div className="border-t border-slate-100 pt-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold text-[#134E4A]">
                 Sous-tâches
@@ -299,7 +299,7 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
           </div>
 
           {/* Due date */}
-          <div>
+          <div className="border-t border-slate-100 pt-4">
             <label htmlFor="task-due-date" className="block text-sm font-semibold text-[#134E4A] mb-1.5">
               Date d'échéance
             </label>
@@ -377,7 +377,7 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
           </div>
 
           {/* Priority */}
-          <div>
+          <div className="border-t border-slate-100 pt-4">
             <span className="block text-sm font-semibold text-[#134E4A] mb-2">Priorité</span>
             <div className="flex gap-2" role="radiogroup" aria-label="Priorité">
               {PRIORITY_OPTIONS.map(opt => (
