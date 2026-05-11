@@ -55,7 +55,6 @@ function mapCategory(row: CategoryRow): Category {
 type ModalState = { open: false } | { open: true; status: Status; editId?: string }
 type Env = 'pro' | 'perso'
 
-const PERSO_CATEGORY_IDS = new Set(['perso'])
 
 const ENV_CONFIG: Record<Env, { label: string; icon: string; bg: string; text: string; subtext: string }> = {
   pro:   { label: 'Pro',   icon: '💼', bg: 'bg-[#134E4A]', text: 'text-teal-100',  subtext: 'text-teal-300' },
@@ -68,7 +67,7 @@ export default function App() {
   const installPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
   const [canInstall, setCanInstall] = useState(false)
   const [tasks, setTasks] = useState<Task[]>([])
-  const [customCategories, setCustomCategories] = useState<Category[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set())
   const [showArchive, setShowArchive] = useState(false)
@@ -142,10 +141,8 @@ export default function App() {
   const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState<Status>('todo')
 
-  const categories: Category[] = [...DEFAULT_CATEGORIES, ...customCategories]
-
   const envCategories = categories.filter(c =>
-    env === 'perso' ? PERSO_CATEGORY_IDS.has(c.id) : !PERSO_CATEGORY_IDS.has(c.id)
+    env === 'perso' ? c.id === 'perso' : c.id !== 'perso'
   )
   const ARCHIVE_THRESHOLD = 15 * 24 * 60 * 60 * 1000
   const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 }
@@ -253,7 +250,7 @@ export default function App() {
         setSession(null)
         setTasks([])
         setHiddenCategories(new Set())
-        setCustomCategories([])
+        setCategories([])
       }
     })
 
@@ -267,7 +264,16 @@ export default function App() {
       supabase.from('categories').select('*').order('created_at', { ascending: true }),
     ])
     setTasks((tasksData ?? []).map(r => mapTask(r as TaskRow)))
-    setCustomCategories((catsData ?? []).map(r => mapCategory(r as CategoryRow)))
+
+    // Seed default categories if DB is empty
+    let cats = (catsData ?? []).map(r => mapCategory(r as CategoryRow))
+    if (cats.length === 0) {
+      const { data: seeded } = await supabase.from('categories').insert(
+        DEFAULT_CATEGORIES.map(c => ({ id: c.id, label: c.label, color: c.color, user_id: session!.user.id }))
+      ).select()
+      cats = (seeded ?? []).map(r => mapCategory(r as CategoryRow))
+    }
+    setCategories(cats)
     setLoading(false)
   }
 
@@ -410,18 +416,40 @@ export default function App() {
   // ── Categories ─────────────────────────────────────────────────────────────
 
   async function deleteCategory(id: string) {
+    // Must keep at least one category
+    if (categories.length <= 1) return
+
     // Fallback: first category that isn't the one being deleted
-    const fallback = envCategories.find(c => c.id !== id)
+    const fallback = categories.find(c => c.id !== id)
     if (!fallback) return
 
     // Optimistic update
     setTasks(prev => prev.map(t => t.categoryId === id ? { ...t, categoryId: fallback.id } : t))
-    setCustomCategories(prev => prev.filter(c => c.id !== id))
+    setCategories(prev => prev.filter(c => c.id !== id))
     if (activeFilter === id) setActiveFilter(null)
 
     // Persist to DB
     await supabase.from('tasks').update({ category_id: fallback.id }).eq('category_id', id)
     await supabase.from('categories').delete().eq('id', id)
+  }
+
+  async function renameCategory(id: string, newLabel: string): Promise<boolean> {
+    const trimmed = newLabel.trim()
+    if (!trimmed) return false
+    const isDuplicate = categories.some(c => c.id !== id && c.label.toLowerCase() === trimmed.toLowerCase())
+    if (isDuplicate) return false
+
+    // Optimistic update
+    setCategories(prev => prev.map(c => c.id === id ? { ...c, label: trimmed } : c))
+
+    // Persist to DB
+    const { error } = await supabase.from('categories').update({ label: trimmed }).eq('id', id)
+    if (error) {
+      // Rollback
+      setCategories(prev => prev.map(c => c.id === id ? { ...c, label: categories.find(cat => cat.id === id)?.label ?? trimmed } : c))
+      return false
+    }
+    return true
   }
 
   async function addCategory(label: string, color?: string): Promise<Category | null> {
@@ -430,13 +458,13 @@ export default function App() {
     const isDuplicate = categories.some(c => c.label.toLowerCase() === trimmed.toLowerCase())
     if (isDuplicate) return null
     const id = trimmed.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-    const chosenColor = color ?? CATEGORY_COLOR_PALETTE[customCategories.length % CATEGORY_COLOR_PALETTE.length]
+    const chosenColor = color ?? CATEGORY_COLOR_PALETTE[categories.length % CATEGORY_COLOR_PALETTE.length]
     const { error } = await supabase.from('categories').insert({
       id, label: trimmed, color: chosenColor, user_id: session!.user.id,
     })
     if (error) return null
     const newCat: Category = { id, label: trimmed, color: chosenColor }
-    setCustomCategories(prev => [...prev, newCat])
+    setCategories(prev => [...prev, newCat])
     return newCat
   }
 
@@ -786,6 +814,8 @@ export default function App() {
         onFilterChange={id => { setActiveFilter(id); setShowArchive(false); setShowOverdue(false) }}
         onAddCategory={addCategory}
         onDeleteCategory={deleteCategory}
+        onRenameCategory={renameCategory}
+        canDeleteCategory={categories.length > 1}
         hiddenCategories={hiddenCategories}
         onToggleHideCategory={toggleHideCategory}
         showArchive={showArchive}

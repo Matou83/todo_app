@@ -1,7 +1,5 @@
-import { useState } from 'react'
-import { type Category, CATEGORY_COLOR_PALETTE, DEFAULT_CATEGORIES } from '../types'
-
-const DEFAULT_CATEGORY_IDS = new Set(DEFAULT_CATEGORIES.map(c => c.id))
+import { useState, useRef, useEffect } from 'react'
+import { type Category, CATEGORY_COLOR_PALETTE } from '../types'
 
 interface Props {
   categories: Category[]
@@ -9,6 +7,8 @@ interface Props {
   onFilterChange: (id: string | null) => void
   onAddCategory: (label: string, color?: string) => Promise<Category | null>
   onDeleteCategory: (id: string) => Promise<void>
+  onRenameCategory: (id: string, newLabel: string) => Promise<boolean>
+  canDeleteCategory: boolean
   hiddenCategories: Set<string>
   onToggleHideCategory: (id: string) => void
   showArchive: boolean
@@ -19,12 +19,19 @@ interface Props {
   overdueCount: number
 }
 
-export default function FilterBar({ categories, activeFilter, onFilterChange, onAddCategory, onDeleteCategory, hiddenCategories, onToggleHideCategory, showArchive, onToggleArchive, archiveCount, showOverdue, onToggleOverdue, overdueCount }: Props) {
+export default function FilterBar({ categories, activeFilter, onFilterChange, onAddCategory, onDeleteCategory, onRenameCategory, canDeleteCategory, hiddenCategories, onToggleHideCategory, showArchive, onToggleArchive, archiveCount, showOverdue, onToggleOverdue, overdueCount }: Props) {
   const [showInput, setShowInput] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [error, setError] = useState('')
   const [selectedColor, setSelectedColor] = useState(CATEGORY_COLOR_PALETTE[0])
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const renameInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (renamingId) renameInputRef.current?.focus()
+  }, [renamingId])
 
   async function handleAdd() {
     if (!inputValue.trim()) return
@@ -42,6 +49,20 @@ export default function FilterBar({ categories, activeFilter, onFilterChange, on
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter') handleAdd()
     if (e.key === 'Escape') { setShowInput(false); setInputValue(''); setError('') }
+  }
+
+  function startRename(cat: Category) {
+    setRenamingId(cat.id)
+    setRenameValue(cat.label)
+  }
+
+  async function submitRename() {
+    if (!renamingId) return
+    if (renameValue.trim() && renameValue.trim() !== categories.find(c => c.id === renamingId)?.label) {
+      await onRenameCategory(renamingId, renameValue.trim())
+    }
+    setRenamingId(null)
+    setRenameValue('')
   }
 
   return (
@@ -64,7 +85,27 @@ export default function FilterBar({ categories, activeFilter, onFilterChange, on
       {categories.map(cat => {
         const isHidden = hiddenCategories.has(cat.id)
         const isActive = activeFilter === cat.id
-        const isCustom = !DEFAULT_CATEGORY_IDS.has(cat.id)
+
+        // Inline rename state
+        if (renamingId === cat.id) {
+          return (
+            <div key={cat.id} className="shrink-0 flex items-center gap-1 bg-white border-2 rounded-full px-2.5 py-0.5" style={{ borderColor: cat.color }}>
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+              <input
+                ref={renameInputRef}
+                type="text"
+                value={renameValue}
+                onChange={e => setRenameValue(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') submitRename()
+                  if (e.key === 'Escape') { setRenamingId(null); setRenameValue('') }
+                }}
+                onBlur={submitRename}
+                className="text-xs font-semibold text-slate-700 outline-none bg-transparent w-20"
+              />
+            </div>
+          )
+        }
 
         // Inline confirm state
         if (confirmDeleteId === cat.id) {
@@ -92,9 +133,8 @@ export default function FilterBar({ categories, activeFilter, onFilterChange, on
           <div key={cat.id} className="relative group/cat shrink-0 flex items-center">
             <button
               onClick={() => onFilterChange(isActive ? null : cat.id)}
-              className={`rounded-full pl-3 py-1 text-xs font-semibold transition-all duration-150 cursor-pointer ${
-                isCustom ? 'pr-11' : 'pr-7'
-              } ${
+              onDoubleClick={e => { e.preventDefault(); startRename(cat) }}
+              className={`rounded-full pl-3 py-1 text-xs font-semibold transition-all duration-150 cursor-pointer pr-11 ${
                 isActive ? 'text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
               } ${isHidden ? 'outline outline-2 outline-offset-1' : ''}`}
               style={{
@@ -111,9 +151,7 @@ export default function FilterBar({ categories, activeFilter, onFilterChange, on
             <button
               type="button"
               onClick={e => { e.stopPropagation(); onToggleHideCategory(cat.id) }}
-              className={`absolute top-1/2 -translate-y-1/2 transition-opacity duration-150 cursor-pointer ${
-                isCustom ? 'right-6' : 'right-1.5'
-              } ${
+              className={`absolute top-1/2 -translate-y-1/2 right-6 transition-opacity duration-150 cursor-pointer ${
                 isHidden ? 'opacity-100' : 'opacity-0 group-hover/cat:opacity-100 sm:opacity-0 max-sm:opacity-100'
               }`}
               aria-label={isHidden ? `Afficher ${cat.label}` : `Masquer ${cat.label}`}
@@ -133,8 +171,8 @@ export default function FilterBar({ categories, activeFilter, onFilterChange, on
               )}
             </button>
 
-            {/* Delete button (custom categories only) */}
-            {isCustom && (
+            {/* Delete button */}
+            {canDeleteCategory && (
               <button
                 type="button"
                 onClick={e => { e.stopPropagation(); setConfirmDeleteId(cat.id) }}

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { type Column, type Status, type Priority, type Task, type Category, type Subtask, DEFAULT_CATEGORIES } from '../types'
+import { type Column, type Status, type Priority, type Task, type Category, type Subtask } from '../types'
 import DescriptionEditor from './DescriptionEditor'
 
 interface Props {
@@ -25,7 +25,7 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
   const [description, setDescription] = useState(task?.description ?? '')
   const [status, setStatus] = useState<Status>(task?.status ?? defaultStatus)
   const [priority, setPriority] = useState<Priority>(task?.priority ?? 'medium')
-  const [categoryId, setCategoryId] = useState<string>(task?.categoryId ?? DEFAULT_CATEGORIES[0].id)
+  const [categoryId, setCategoryId] = useState<string>(task?.categoryId ?? categories[0]?.id ?? '')
   const [showNewCat, setShowNewCat] = useState(false)
   const [newCatLabel, setNewCatLabel] = useState('')
   const [newCatError, setNewCatError] = useState('')
@@ -66,7 +66,7 @@ export default function TaskModal({ defaultStatus, columns, categories, task, on
     description: task?.description ?? '',
     status: (task?.status ?? defaultStatus) as Status,
     priority: (task?.priority ?? 'medium') as Priority,
-    categoryId: task?.categoryId ?? DEFAULT_CATEGORIES[0].id,
+    categoryId: task?.categoryId ?? categories[0]?.id ?? '',
     dueDate: task?.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : '',
   })
   // Subtasks are auto-saved via onUpdateSubtasks — not tracked in hasChanges
