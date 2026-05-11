@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { type Task, type Column, type Status, type Category } from '../types'
 import CategorySection from './CategorySection'
@@ -70,6 +70,18 @@ export default function KanbanColumn({
   const q = searchQuery?.trim().toLowerCase() ?? ''
   const matchingCount = q ? visibleTasks.filter(t => t.title.toLowerCase().includes(q)).length : visibleTasks.length
 
+  const prevCountRef = useRef(matchingCount)
+  const [countPop, setCountPop] = useState(false)
+
+  useEffect(() => {
+    if (prevCountRef.current !== matchingCount) {
+      setCountPop(true)
+      const t = setTimeout(() => setCountPop(false), 300)
+      prevCountRef.current = matchingCount
+      return () => clearTimeout(t)
+    }
+  }, [matchingCount])
+
   // Group visible tasks by categoryId, preserving category order
   const groups = categories
     .map(cat => ({ category: cat, tasks: visibleTasks.filter(t => t.categoryId === cat.id) }))
@@ -121,7 +133,10 @@ export default function KanbanColumn({
                 </svg>
               </button>
             )}
-            <span className={`text-xs font-semibold rounded-full px-2 py-0.5 ${style.count}`}>
+            <span
+              className={`text-xs font-semibold rounded-full px-2 py-0.5 ${style.count}`}
+              style={countPop ? { animation: 'counterPop 0.3s ease-out' } : undefined}
+            >
               {matchingCount}
             </span>
           </div>
