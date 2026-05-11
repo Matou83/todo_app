@@ -901,8 +901,11 @@ export default function App() {
       ) : (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <main className="p-6 flex gap-5 overflow-x-auto min-h-[calc(100vh-121px)] items-start">
-            {COLUMNS.map(col => (
-              <div key={col.id} ref={el => { columnRefs.current[col.id] = el }} className="flex-1 min-w-0 flex flex-col">
+            {COLUMNS.map(col => {
+              const colTasks = envTasks.filter(t => t.status === col.id)
+              const colIsEmpty = activeFilter ? colTasks.filter(t => t.categoryId === activeFilter).length === 0 : colTasks.length === 0
+              return (
+              <div key={col.id} ref={el => { columnRefs.current[col.id] = el }} className={`flex flex-col transition-all duration-300 ${colIsEmpty ? 'w-[140px] shrink-0' : 'flex-1 min-w-0'}`}>
                 <KanbanColumn
                   column={col}
                   tasks={envTasks.filter(t => t.status === col.id)}
@@ -920,7 +923,8 @@ export default function App() {
                   overdueTaskIds={overdueTaskIds}
                 />
               </div>
-            ))}
+              )
+            })}
           </main>
           <DragOverlay>
             {activeTask ? (

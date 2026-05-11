@@ -115,10 +115,10 @@ export default function KanbanColumn({
         <div className={`h-1 w-full ${style.accent}`} aria-hidden="true" />
 
         {/* Column header */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-3">
+        <div className={`flex items-center justify-between px-4 pt-4 pb-3 ${isEmpty ? 'flex-col gap-1' : ''}`}>
           <div className="flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${style.dot} shrink-0`} aria-hidden="true" />
-            <span className={`font-semibold text-sm ${style.label}`}>{column.label}</span>
+            <span className={`font-semibold ${isEmpty ? 'text-xs' : 'text-sm'} ${style.label}`}>{column.label}</span>
           </div>
           <div className="flex items-center gap-2">
             {groups.length > 1 && (
@@ -145,19 +145,17 @@ export default function KanbanColumn({
         {/* Task groups */}
         <div className="flex flex-col gap-3 px-3 flex-1 min-h-[60px]">
           {isEmpty ? (
-            <div className="flex flex-col items-center justify-center flex-1 py-10 gap-2">
-              <span className="text-2xl" aria-hidden="true">
+            <div className="flex flex-col items-center justify-center flex-1 py-4 gap-2">
+              <span className="text-lg" aria-hidden="true">
                 {column.id === 'todo' ? '📋' : column.id === 'in_progress' ? '🚀' : '🎉'}
               </span>
-              <p className="text-xs text-slate-400 text-center font-medium leading-relaxed">
-                {activeFilter
-                  ? 'Aucune tâche dans cette catégorie'
-                  : column.id === 'todo'
-                    ? 'Rien à faire pour le moment'
-                    : column.id === 'in_progress'
-                      ? 'Rien en cours — prêt à démarrer ?'
-                      : 'Aucune tâche terminée'}
-              </p>
+              <div className="border-2 border-dashed border-slate-200 rounded-xl w-full py-5 flex items-center justify-center transition-colors duration-150">
+                <p className="text-[10px] text-slate-400 text-center font-medium">
+                  {activeFilter
+                    ? 'Aucune tâche'
+                    : 'Glisser ici'}
+                </p>
+              </div>
             </div>
           ) : (
             groups.map(({ category, tasks: groupTasks }) => (
