@@ -45,7 +45,7 @@ export default function FilterBar({ categories, activeFilter, onFilterChange, on
   }
 
   return (
-    <div className="bg-white border-b border-slate-100 px-4 sm:px-6 py-2.5 flex items-center gap-2 overflow-x-auto flex-nowrap sm:flex-wrap sticky top-[73px] z-10 scrollbar-none">
+    <div className="bg-white border-b border-slate-100 px-4 sm:px-6 py-2.5 flex items-center gap-2 overflow-x-auto flex-nowrap sm:flex-wrap sticky top-[57px] z-10 scrollbar-none">
       <span className="text-xs font-semibold text-slate-400 mr-1 shrink-0">FILTRE</span>
 
       {/* "Toutes" chip */}

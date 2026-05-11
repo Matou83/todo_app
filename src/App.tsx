@@ -471,7 +471,6 @@ export default function App() {
   const activeTaskCategory = activeTask ? categories.find(c => c.id === activeTask.categoryId) : undefined
   const done = envTasks.filter(t => t.status === 'done').length
   const total = envTasks.length
-  const envConf = ENV_CONFIG[env]
 
   // ── Loading / Auth gate ───────────────────────────────────────────────────
 
@@ -720,15 +719,6 @@ export default function App() {
         document.body
       )}
 
-      {/* Env banner */}
-      <div className={`${envConf.bg} px-6 py-2 flex items-center gap-2`} role="status" aria-live="polite">
-        <span className="text-base leading-none" aria-hidden="true">{envConf.icon}</span>
-        <span className={`text-xs font-bold ${envConf.text}`}>Environnement {envConf.label}</span>
-        {total > 0 && (
-          <span className={`text-xs ${envConf.subtext} ml-auto`}>{done}/{total} terminées</span>
-        )}
-      </div>
-
       {/* FilterBar */}
       <FilterBar
         categories={envCategories}
@@ -800,7 +790,7 @@ export default function App() {
       {!showArchive && (isMobile ? (
         <>
           {/* Tab bar */}
-          <div className="bg-white border-b border-slate-200 flex sticky top-[113px] z-10">
+          <div className="bg-white border-b border-slate-200 flex sticky top-[93px] z-10">
             {COLUMNS.map(col => {
               const count = envTasks.filter(t => t.status === col.id).length
               const isActive = activeTab === col.id
