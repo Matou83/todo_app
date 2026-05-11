@@ -130,9 +130,18 @@ export default function KanbanColumn({
         {/* Task groups */}
         <div className="flex flex-col gap-3 px-3 flex-1 min-h-[60px]">
           {isEmpty ? (
-            <div className="flex items-center justify-center flex-1 py-8">
-              <p className="text-xs text-slate-400 text-center font-medium">
-                {activeFilter ? 'Aucune tâche dans cette catégorie' : 'Aucune tâche'}
+            <div className="flex flex-col items-center justify-center flex-1 py-10 gap-2">
+              <span className="text-2xl" aria-hidden="true">
+                {column.id === 'todo' ? '📋' : column.id === 'in_progress' ? '🚀' : '🎉'}
+              </span>
+              <p className="text-xs text-slate-400 text-center font-medium leading-relaxed">
+                {activeFilter
+                  ? 'Aucune tâche dans cette catégorie'
+                  : column.id === 'todo'
+                    ? 'Rien à faire pour le moment'
+                    : column.id === 'in_progress'
+                      ? 'Rien en cours — prêt à démarrer ?'
+                      : 'Aucune tâche terminée'}
               </p>
             </div>
           ) : (
