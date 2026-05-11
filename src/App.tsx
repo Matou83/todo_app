@@ -489,7 +489,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F0FDFA] font-sans">
       {/* Header */}
-      <header className="bg-white border-b border-teal-100 px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3 sticky top-0 z-20 shadow-sm">
+      <header className="bg-white border-b border-teal-100 px-4 sm:px-6 py-2 sm:py-4 flex items-center gap-3 sticky top-0 z-20 shadow-sm">
 
         {/* Mobile: full-width search mode */}
         {searchOpen && (
@@ -555,7 +555,7 @@ export default function App() {
             <div>
               <h1 className="text-base font-bold text-[#134E4A] leading-tight">Kanban Board</h1>
               {total > 0 && (
-                <p className="text-xs text-teal-500 font-medium leading-tight">{done}/{total} terminées</p>
+                <p className="text-xs text-teal-500 font-medium leading-tight hidden sm:block">{done}/{total} terminées</p>
               )}
             </div>
           )}
@@ -790,7 +790,7 @@ export default function App() {
       {!showArchive && (isMobile ? (
         <>
           {/* Tab bar */}
-          <div className="bg-white border-b border-slate-200 flex sticky top-[93px] z-10">
+          <div className="bg-white border-b border-slate-200 flex sticky top-[85px] z-10">
             {COLUMNS.map(col => {
               const count = envTasks.filter(t => t.status === col.id).length
               const isActive = activeTab === col.id
