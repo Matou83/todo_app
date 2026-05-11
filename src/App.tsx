@@ -73,7 +73,7 @@ export default function App() {
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set())
   const [showArchive, setShowArchive] = useState(false)
   const [showOverdue, setShowOverdue] = useState(false)
-  const [streakCount, setStreakCount] = useState(0)
+  const streakCountRef = useRef(0)
   const [streakToast, setStreakToast] = useState<string | null>(null)
   const streakToastTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const columnRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -327,9 +327,8 @@ export default function App() {
         : t))
 
       if (status === 'done' && task) {
-        const newStreak = streakCount + 1
-        setStreakCount(newStreak)
-        showStreakToast(newStreak)
+        streakCountRef.current += 1
+        showStreakToast(streakCountRef.current)
 
         const sourceStatus = task.status
         if (sourceStatus !== 'done') {
