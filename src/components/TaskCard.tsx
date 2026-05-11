@@ -249,10 +249,10 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
           {!isDragOverlay && task.status !== 'done' && (
             <button
               onClick={e => { e.stopPropagation(); onMove(task.id, 'done') }}
-              className="w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center text-transparent hover:border-teal-400 hover:text-teal-400 hover:bg-teal-50 transition-all duration-150 cursor-pointer shrink-0"
+              className="w-7 h-7 rounded-full border-2 border-slate-300 flex items-center justify-center text-slate-300 hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-50 hover:scale-110 transition-all duration-150 cursor-pointer shrink-0"
               aria-label="Marquer comme terminée"
             >
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </button>
