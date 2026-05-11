@@ -45,12 +45,12 @@ const COLUMN_STYLE: Record<Status, {
     addBtn: 'text-teal-400 hover:text-teal-700 hover:bg-teal-100',
   },
   done: {
-    wrapper: 'bg-orange-50/70 border border-orange-200',
-    accent: 'bg-orange-400',
-    dot: 'bg-orange-400',
-    label: 'text-orange-800',
-    count: 'bg-orange-100 text-orange-600',
-    addBtn: 'text-orange-400 hover:text-orange-700 hover:bg-orange-100',
+    wrapper: 'bg-emerald-50/70 border border-emerald-200',
+    accent: 'bg-emerald-500',
+    dot: 'bg-emerald-500',
+    label: 'text-emerald-800',
+    count: 'bg-emerald-100 text-emerald-600',
+    addBtn: 'text-emerald-400 hover:text-emerald-700 hover:bg-emerald-100',
   },
 }
 

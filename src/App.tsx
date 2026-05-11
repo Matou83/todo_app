@@ -807,11 +807,11 @@ export default function App() {
               const activeStyle =
                 col.id === 'todo' ? 'text-slate-700 border-slate-700' :
                 col.id === 'in_progress' ? 'text-teal-700 border-teal-600' :
-                'text-orange-600 border-orange-500'
+                'text-emerald-600 border-emerald-500'
               const activeBadge =
                 col.id === 'todo' ? 'bg-slate-100 text-slate-600' :
                 col.id === 'in_progress' ? 'bg-teal-100 text-teal-700' :
-                'bg-orange-100 text-orange-600'
+                'bg-emerald-100 text-emerald-600'
               return (
                 <button
                   key={col.id}
