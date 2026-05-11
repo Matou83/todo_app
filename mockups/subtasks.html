@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Feature 8 — Sous-tâches</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; padding: 24px; }
+  h1 { font-size: 14px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+  .subtitle { font-size: 12px; color: #94a3b8; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .option { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
+  .option-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .1em; padding: 14px 16px 0; }
+  .option-title { font-size: 15px; font-weight: 700; color: #0f172a; padding: 4px 16px 12px; border-bottom: 1px solid #f1f5f9; }
+  .preview { padding: 16px; min-height: 400px; }
+
+  /* Task card shared */
+  .card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .card-title { font-size: 11px; font-weight: 700; color: #134E4A; margin-bottom: 6px; }
+  .card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .badge { font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 9999px; }
+  .badge-cat { background: #dbeafe; color: #1d4ed8; }
+  .badge-prio-high { background: #fee2e2; color: #dc2626; }
+  .badge-date { background: #fef9c3; color: #854d0e; }
+  .col-wrap { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+  .col-head { background: white; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+  .col-title { font-size: 10px; font-weight: 700; color: #134E4A; }
+  .col-count { font-size: 9px; font-weight: 600; background: #f1f5f9; color: #64748b; padding: 1px 5px; border-radius: 9999px; }
+  .col-body { padding: 8px; }
+
+  /* ── Option A — badge compteur sur la card ── */
+  .subtask-badge { display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 600; color: #64748b; }
+  .subtask-badge-done { color: #16a34a; }
+  .progress-mini { height: 3px; border-radius: 9999px; background: #e2e8f0; flex: 1; margin-top: 6px; overflow: hidden; }
+  .progress-mini-fill { height: 100%; border-radius: 9999px; background: #14b8a6; }
+
+  /* ── Option B — checklist inline expandable ── */
+  .subtask-list { margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 7px; display: flex; flex-direction: column; gap: 4px; }
+  .subtask-item { display: flex; align-items: center; gap: 5px; }
+  .subtask-checkbox { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #cbd5e1; background: white; shrink: 0; }
+  .subtask-checkbox-done { background: #14b8a6; border-color: #14b8a6; display: flex; align-items: center; justify-content: center; }
+  .subtask-text { font-size: 9px; color: #475569; }
+  .subtask-text-done { text-decoration: line-through; color: #94a3b8; }
+  .expand-btn { font-size: 8px; color: #94a3b8; cursor: pointer; margin-top: 4px; }
+
+  /* ── Option C — sous-tâches dans le modal uniquement ── */
+  .modal-preview { background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.1); }
+  .modal-header { background: #134E4A; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { color: white; font-size: 11px; font-weight: 700; }
+  .modal-body { padding: 12px 14px; }
+  .modal-section-label { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .modal-subtask-item { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px solid #f8fafc; }
+  .modal-subtask-item:last-child { border-bottom: none; }
+  .modal-checkbox { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid #cbd5e1; background: white; shrink: 0; }
+  .modal-checkbox-done { background: #14b8a6; border-color: #14b8a6; }
+  .modal-subtask-text { font-size: 10px; color: #475569; flex: 1; }
+  .modal-add-btn { font-size: 9px; color: #0d9488; cursor: pointer; margin-top: 6px; display: flex; align-items: center; gap: 3px; }
+  .card-subtask-indicator { display: flex; align-items: center; gap: 4px; }
+
+  .desc { padding: 12px 16px; border-top: 1px solid #f1f5f9; }
+  .desc p { font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 6px; }
+  .pro { color: #16a34a; font-weight: 600; }
+  .con { color: #dc2626; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Feature 8 — Sous-tâches · 3 propositions</h1>
+<p class="subtitle">Stocker des sous-tâches textuelles par tâche, avec compteur de progression.</p>
+<div class="grid">
+
+  <!-- ══ OPTION A : Badge + mini progress bar sur la card ═══════════ -->
+  <div class="option">
+    <div class="option-label">Option A</div>
+    <div class="option-title">Badge compteur + barre de progression</div>
+    <div class="preview">
+      <div class="col-wrap">
+        <div class="col-head"><span class="col-title">À faire</span><span class="col-count">3</span></div>
+        <div class="col-body">
+
+          <!-- Card avec sous-tâches partiellement faites -->
+          <div class="card">
+            <div class="card-title">Refonte page d'accueil</div>
+            <div class="card-meta">
+              <span class="badge badge-cat">IA</span>
+              <span class="badge badge-prio-high">Haute</span>
+              <span class="badge badge-date">Demain</span>
+            </div>
+            <!-- Progress bar + compteur -->
+            <div class="progress-mini" style="margin-top:8px;">
+              <div class="progress-mini-fill" style="width:60%;"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+              <div class="subtask-badge subtask-badge-done">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                3/5 sous-tâches
+              </div>
+              <span style="font-size:8px;color:#94a3b8;">60%</span>
+            </div>
+          </div>
+
+          <!-- Card avec 0 sous-tâches -->
+          <div class="card">
+            <div class="card-title">Audit SEO Q2</div>
+            <div class="card-meta">
+              <span class="badge badge-cat">Ops</span>
+            </div>
+          </div>
+
+          <!-- Card avec toutes les sous-tâches faites -->
+          <div class="card">
+            <div class="card-title">Intégration Stripe</div>
+            <div class="card-meta">
+              <span class="badge badge-cat">IA</span>
+            </div>
+            <div class="progress-mini" style="margin-top:8px;">
+              <div class="progress-mini-fill" style="width:100%;background:#16a34a;"></div>
+            </div>
+            <div style="margin-top:4px;">
+              <div class="subtask-badge subtask-badge-done">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                4/4 terminées ✓
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div style="margin-top:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 10px;font-size:9px;color:#166534;">
+        ✏️ Les sous-tâches se gèrent dans le modal d'édition. La card affiche uniquement le compteur et la barre de progression.
+      </div>
+    </div>
+    <div class="desc">
+      <p>La card affiche un badge "X/Y sous-tâches" + une mini barre de progression teal→vert quand tout est fait. Pas d'interaction directe sur la card — les sous-tâches se gèrent dans le modal.</p>
+      <p><span class="pro">✓</span> Card toujours compacte<br>
+         <span class="pro">✓</span> Progression visible d'un coup d'œil<br>
+         <span class="pro">✓</span> Cohérent avec le style existant<br>
+         <span class="con">✗</span> Pas d'interaction rapide depuis la card</p>
+    </div>
+  </div>
+
+  <!-- ══ OPTION B : Checklist inline sur la card (expandable) ═══════ -->
+  <div class="option">
+    <div class="option-label">Option B</div>
+    <div class="option-title">Checklist expandable sur la card</div>
+    <div class="preview">
+      <div class="col-wrap">
+        <div class="col-head"><span class="col-title">En cours</span><span class="col-count">2</span></div>
+        <div class="col-body">
+
+          <!-- Card expandée avec checklist visible -->
+          <div class="card" style="border-color:#99f6e4;">
+            <div class="card-title">Refonte page d'accueil</div>
+            <div class="card-meta">
+              <span class="badge badge-cat">IA</span>
+              <div class="subtask-badge" style="margin-left:auto;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                3/5
+              </div>
+            </div>
+            <!-- Expanded checklist -->
+            <div class="subtask-list">
+              <div class="subtask-item">
+                <div class="subtask-checkbox subtask-checkbox-done">
+                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="subtask-text subtask-text-done">Wireframes validés</span>
+              </div>
+              <div class="subtask-item">
+                <div class="subtask-checkbox subtask-checkbox-done">
+                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="subtask-text subtask-text-done">Maquettes Figma</span>
+              </div>
+              <div class="subtask-item">
+                <div class="subtask-checkbox subtask-checkbox-done">
+                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="subtask-text subtask-text-done">Intégration HTML</span>
+              </div>
+              <div class="subtask-item">
+                <div class="subtask-checkbox"></div>
+                <span class="subtask-text">Tests responsives</span>
+              </div>
+              <div class="subtask-item">
+                <div class="subtask-checkbox"></div>
+                <span class="subtask-text">Mise en prod</span>
+              </div>
+            </div>
+            <div class="expand-btn">▲ Replier</div>
+          </div>
+
+          <!-- Card repliée -->
+          <div class="card">
+            <div class="card-title">Migration API v2</div>
+            <div class="card-meta">
+              <span class="badge badge-cat">Ops</span>
+              <div class="subtask-badge" style="margin-left:auto;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                1/3
+              </div>
+            </div>
+            <div class="expand-btn">▼ Voir les sous-tâches</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <p>Un bouton "▼ Voir les sous-tâches" sur la card affiche une mini checklist inline. Chaque case est cochable directement sans ouvrir le modal. Les sous-tâches se gèrent aussi dans le modal.</p>
+      <p><span class="pro">✓</span> Interaction rapide sans ouvrir le modal<br>
+         <span class="pro">✓</span> Cocher une tâche = immédiat<br>
+         <span class="con">✗</span> Card peut devenir très haute<br>
+         <span class="con">✗</span> Complexe à gérer sur mobile (DnD + expand)</p>
+    </div>
+  </div>
+
+  <!-- ══ OPTION C : Sous-tâches dans le modal, badge minimal sur card ══ -->
+  <div class="option">
+    <div class="option-label">Option C</div>
+    <div class="option-title">Gestion dans le modal, badge sur card</div>
+    <div class="preview">
+
+      <!-- Card avec badge minimal -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:9px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Sur le board</div>
+        <div class="card">
+          <div class="card-title">Refonte page d'accueil</div>
+          <div class="card-meta">
+            <span class="badge badge-cat">IA</span>
+            <span class="badge badge-prio-high">Haute</span>
+            <!-- Minimal indicator -->
+            <div class="card-subtask-indicator" style="margin-left:auto;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+              <span style="font-size:9px;font-weight:700;color:#64748b;">3/5</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal with checklist -->
+      <div style="margin-bottom:6px;">
+        <div style="font-size:9px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Dans le modal</div>
+        <div class="modal-preview">
+          <div class="modal-header">
+            <span class="modal-title">Refonte page d'accueil</span>
+            <span style="color:#5eead4;font-size:9px;">IA · Haute</span>
+          </div>
+          <div class="modal-body">
+            <div class="modal-section-label">Sous-tâches · 3/5</div>
+            <!-- Progress bar -->
+            <div style="height:3px;background:#e2e8f0;border-radius:9999px;margin-bottom:8px;overflow:hidden;">
+              <div style="width:60%;height:100%;background:#14b8a6;border-radius:9999px;"></div>
+            </div>
+            <div class="modal-subtask-item">
+              <div class="modal-checkbox modal-checkbox-done"></div>
+              <span class="modal-subtask-text" style="text-decoration:line-through;color:#94a3b8;">Wireframes validés</span>
+            </div>
+            <div class="modal-subtask-item">
+              <div class="modal-checkbox modal-checkbox-done"></div>
+              <span class="modal-subtask-text" style="text-decoration:line-through;color:#94a3b8;">Maquettes Figma</span>
+            </div>
+            <div class="modal-subtask-item">
+              <div class="modal-checkbox modal-checkbox-done"></div>
+              <span class="modal-subtask-text" style="text-decoration:line-through;color:#94a3b8;">Intégration HTML</span>
+            </div>
+            <div class="modal-subtask-item">
+              <div class="modal-checkbox"></div>
+              <span class="modal-subtask-text">Tests responsives</span>
+            </div>
+            <div class="modal-subtask-item">
+              <div class="modal-checkbox"></div>
+              <span class="modal-subtask-text">Mise en prod</span>
+            </div>
+            <div class="modal-add-btn">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Ajouter une sous-tâche
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <p>La card affiche un badge icône + "3/5" discret. Toute la gestion (ajout, suppression, cocher) se fait dans le modal. Stockage en JSON dans une colonne <code>subtasks</code> sur la table tasks.</p>
+      <p><span class="pro">✓</span> Card reste compacte et lisible<br>
+         <span class="pro">✓</span> UX modale déjà existante — cohérent<br>
+         <span class="pro">✓</span> Zéro migration complexe (JSON column)<br>
+         <span class="con">✗</span> Cocher une sous-tâche = ouvrir le modal</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

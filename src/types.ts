@@ -7,6 +7,12 @@ export interface Category {
   color: string
 }
 
+export interface Subtask {
+  id: string
+  title: string
+  done: boolean
+}
+
 export interface Task {
   id: string
   title: string
@@ -17,6 +23,7 @@ export interface Task {
   createdAt: number
   dueDate?: number
   completedAt?: number
+  subtasks: Subtask[]
 }
 
 export interface Column {
@@ -37,8 +44,9 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'perso',   label: 'Perso',   color: '#F97316' },
 ]
 
-// Palette pour les catégories créées par l'utilisateur (cycle)
+// Palette pour les catégories créées par l'utilisateur
 export const CATEGORY_COLOR_PALETTE = [
   '#EF4444', '#F97316', '#EAB308', '#22C55E',
-  '#14B8A6', '#6366F1', '#A855F7', '#EC4899',
+  '#14B8A6', '#3B82F6', '#6366F1', '#A855F7',
+  '#EC4899', '#0EA5E9', '#10B981', '#8B5CF6',
 ]

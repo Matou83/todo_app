@@ -16,6 +16,7 @@ interface Props {
   isDragOverlay?: boolean
   isHidden?: boolean
   searchQuery?: string
+  isOverdueDimmed?: boolean
 }
 
 const PRIORITY_STYLE: Record<Priority, { dot: string; text: string; bg: string; label: string }> = {
@@ -42,7 +43,7 @@ function getDueDateBadge(dueDate: number): { label: string; className: string } 
   }
 }
 
-export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescription, allStatuses, category, isDragOverlay, isHidden, searchQuery }: Props) {
+export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescription, allStatuses, category, isDragOverlay, isHidden, searchQuery, isOverdueDimmed }: Props) {
   const [showMenu, setShowMenu] = useState(false)
   const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; right: number } | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -62,6 +63,7 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
   })
   const dragStyle = transform ? { transform: CSS.Translate.toString(transform) } : undefined
   const wasDragging = useRef(false)
+  const menuActionTs = useRef(0)
 
   useEffect(() => {
     if (isDragging) wasDragging.current = true
@@ -81,7 +83,14 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
   function handleCardClick() {
     if (isDragOverlay) return
     if (wasDragging.current) { wasDragging.current = false; return }
+    // Ignore ghost clicks generated after a menu action (mobile)
+    if (Date.now() - menuActionTs.current < 400) return
     onEdit(task.id)
+  }
+
+  function handleMenuAction(fn: () => void) {
+    menuActionTs.current = Date.now()
+    fn()
   }
 
   return (
@@ -91,7 +100,7 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
       {...(!isDragOverlay ? listeners : {})}
       {...(!isDragOverlay ? attributes : {})}
       onClick={handleCardClick}
-      className={`bg-white rounded-xl px-4 py-3.5 border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group relative cursor-pointer active:cursor-grabbing animate-scale-in ${isDragging ? 'opacity-40' : ''} ${isDragOverlay ? 'shadow-xl rotate-1 opacity-95 cursor-grabbing' : ''} ${isHidden ? 'blur-[4px] opacity-55 pointer-events-none select-none' : ''} ${isSearchDimmed ? 'opacity-25 pointer-events-none select-none border-slate-200' : isSearchMatch && q ? 'border-teal-400 ring-2 ring-teal-400/30 border-slate-200' : 'border-slate-200'}`}
+      className={`bg-white rounded-xl px-4 py-3.5 border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group relative cursor-pointer active:cursor-grabbing animate-scale-in ${isDragging ? 'opacity-40' : ''} ${isDragOverlay ? 'shadow-xl rotate-1 opacity-95 cursor-grabbing' : ''} ${isHidden ? 'blur-[4px] opacity-55 pointer-events-none select-none' : ''} ${isOverdueDimmed ? 'opacity-25 pointer-events-none select-none' : ''} ${isSearchDimmed ? 'opacity-25 pointer-events-none select-none border-slate-200' : isSearchMatch && q ? 'border-teal-400 ring-2 ring-teal-400/30 border-slate-200' : 'border-slate-200'}`}
     >
       {/* Top row: title + menu button */}
       <div className="flex items-start gap-2 justify-between">
@@ -129,9 +138,10 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
                 ref={menuRef}
                 style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, right: menuPos.right, zIndex: 9999 }}
                 className="bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 min-w-44 animate-scale-in"
+                onClick={e => e.stopPropagation()}
               >
                 <button
-                  onClick={() => { onEdit(task.id); setShowMenu(false) }}
+                  onClick={() => handleMenuAction(() => { onEdit(task.id); setShowMenu(false) })}
                   className="flex items-center gap-2.5 w-full text-left px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
                 >
                   <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -148,7 +158,7 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
                     {allStatuses.filter(s => s.id !== task.status).map(s => (
                       <button
                         key={s.id}
-                        onClick={() => { onMove(task.id, s.id); setShowMenu(false) }}
+                        onClick={() => handleMenuAction(() => { onMove(task.id, s.id); setShowMenu(false) })}
                         className="flex items-center gap-2.5 w-full text-left px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
                       >
                         <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -162,7 +172,7 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
 
                 <div className="border-t border-slate-100 mt-1 pt-1">
                   <button
-                    onClick={() => { onDelete(task.id); setShowMenu(false) }}
+                    onClick={() => handleMenuAction(() => { onDelete(task.id); setShowMenu(false) })}
                     className="flex items-center gap-2.5 w-full text-left px-3.5 py-2 text-sm text-red-500 hover:bg-red-50 cursor-pointer transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -186,7 +196,31 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
         />
       )}
 
-      {/* Footer: category + priority + date */}
+      {/* Subtasks progress bar + badge */}
+      {task.subtasks.length > 0 && (() => {
+        const total = task.subtasks.length
+        const done = task.subtasks.filter(s => s.done).length
+        const pct = Math.round((done / total) * 100)
+        const allDone = done === total
+        return (
+          <div className="mt-2.5">
+            <div className="h-1 bg-slate-100 rounded-full overflow-hidden mb-1.5">
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{ width: `${pct}%`, backgroundColor: allDone ? '#16a34a' : '#14b8a6' }}
+              />
+            </div>
+            <div className={`flex items-center gap-1 text-[10px] font-semibold ${allDone ? 'text-green-600' : 'text-slate-400'}`}>
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              {allDone ? `${total}/${total} terminées` : `${done}/${total} sous-tâches`}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Footer: category + priority + date + complete button */}
       <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100 gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 flex-wrap">
           {category && (
@@ -202,15 +236,28 @@ export default function TaskCard({ task, onMove, onDelete, onEdit, onUpdateDescr
             {priority.label}
           </span>
         </div>
-        {dueDateBadge && (
-          <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${dueDateBadge.className}`}>
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-              <rect x="3" y="4" width="18" height="18" rx="2" />
-              <path strokeLinecap="round" d="M16 2v4M8 2v4M3 10h18" />
-            </svg>
-            {dueDateBadge.label}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {dueDateBadge && (
+            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${dueDateBadge.className}`}>
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path strokeLinecap="round" d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+              {dueDateBadge.label}
+            </span>
+          )}
+          {!isDragOverlay && task.status !== 'done' && (
+            <button
+              onClick={e => { e.stopPropagation(); onMove(task.id, 'done') }}
+              className="w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center text-transparent hover:border-teal-400 hover:text-teal-400 hover:bg-teal-50 transition-all duration-150 cursor-pointer shrink-0"
+              aria-label="Marquer comme terminée"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

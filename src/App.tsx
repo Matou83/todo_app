@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
@@ -9,7 +10,7 @@ import { useSwipe } from './hooks/useSwipe'
 import { type Session } from '@supabase/supabase-js'
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
-import { type Task, type Status, type Priority, type Category, COLUMNS, DEFAULT_CATEGORIES, CATEGORY_COLOR_PALETTE } from './types'
+import { type Task, type Status, type Priority, type Category, type Subtask, COLUMNS, DEFAULT_CATEGORIES, CATEGORY_COLOR_PALETTE } from './types'
 import { supabase } from './lib/supabase'
 import KanbanColumn from './components/KanbanColumn'
 import TaskModal from './components/AddTaskModal'
@@ -24,6 +25,7 @@ type TaskRow = {
   id: string; title: string; description: string | null
   status: string; priority: string; category_id: string; created_at: string
   due_date: string | null; completed_at: string | null
+  subtasks: Subtask[] | null
 }
 
 type CategoryRow = { id: string; label: string; color: string }
@@ -39,6 +41,7 @@ function mapTask(row: TaskRow): Task {
     createdAt: new Date(row.created_at).getTime(),
     dueDate: row.due_date ? new Date(row.due_date).getTime() : undefined,
     completedAt: row.completed_at ? new Date(row.completed_at).getTime() : undefined,
+    subtasks: row.subtasks ?? [],
   }
 }
 
@@ -67,12 +70,24 @@ export default function App() {
   const [customCategories, setCustomCategories] = useState<Category[]>([])
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set())
+  const [showArchive, setShowArchive] = useState(false)
+  const [showOverdue, setShowOverdue] = useState(false)
+
+  function hiddenCatsKey(userId: string) { return `hidden_cats_${userId}` }
+
+  function loadHiddenCategories(userId: string) {
+    try {
+      const raw = localStorage.getItem(hiddenCatsKey(userId))
+      if (raw) setHiddenCategories(new Set(JSON.parse(raw)))
+    } catch {}
+  }
 
   function toggleHideCategory(id: string) {
     setHiddenCategories(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
+      if (session) localStorage.setItem(hiddenCatsKey(session.user.id), JSON.stringify([...next]))
       return next
     })
   }
@@ -80,6 +95,23 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [readNotifIds, setReadNotifIds] = useState<Set<string>>(new Set())
+  const notifBtnRef = useRef<HTMLButtonElement>(null)
+  const notifPanelRef = useRef<HTMLDivElement>(null)
+  const [notifPanelPos, setNotifPanelPos] = useState<{ top: number; right: number } | null>(null)
+
+  useEffect(() => {
+    if (!notifOpen) return
+    function handleClick(e: MouseEvent) {
+      if (!notifPanelRef.current?.contains(e.target as Node) && !notifBtnRef.current?.contains(e.target as Node)) {
+        setNotifOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [notifOpen])
 
   function openSearch() { setSearchOpen(true) }
   function closeSearch() { setSearchOpen(false); setSearchQuery('') }
@@ -129,6 +161,20 @@ export default function App() {
   function switchEnv(next: Env) {
     setEnv(next)
     setActiveFilter(null)
+    setShowArchive(false)
+    setShowOverdue(false)
+  }
+
+  function toggleArchive() {
+    setShowArchive(v => !v)
+    setActiveFilter(null)
+    setShowOverdue(false)
+  }
+
+  function toggleOverdue() {
+    setShowOverdue(v => !v)
+    setActiveFilter(null)
+    setShowArchive(false)
   }
 
   useEffect(() => {
@@ -174,18 +220,20 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      if (session) fetchData()
+      if (session) { loadHiddenCategories(session.user.id); fetchData() }
       else setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN') {
         setSession(session)
+        if (session) loadHiddenCategories(session.user.id)
         fetchData()
       }
       if (event === 'SIGNED_OUT') {
         setSession(null)
         setTasks([])
+        setHiddenCategories(new Set())
         setCustomCategories([])
       }
     })
@@ -214,6 +262,7 @@ export default function App() {
     categoryId: string,
     editId?: string,
     dueDate?: number,
+    subtasks?: Subtask[],
   ): Promise<boolean> {
     const due_date = dueDate ? new Date(dueDate).toISOString() : null
     if (editId) {
@@ -223,22 +272,30 @@ export default function App() {
       const completed_at = becomingDone
         ? new Date().toISOString()
         : leavingDone ? null : prevTask?.completedAt ? new Date(prevTask.completedAt).toISOString() : null
+      const mergedSubtasks = subtasks ?? prevTask?.subtasks ?? []
       const { error } = await supabase.from('tasks').update({
         title, description, status, priority, category_id: categoryId, due_date, completed_at,
+        subtasks: mergedSubtasks,
       }).eq('id', editId)
       if (error) { console.error('saveTask update error:', error); return false }
       const completedAt = completed_at ? new Date(completed_at).getTime() : undefined
-      setTasks(prev => prev.map(t => t.id === editId ? { ...t, title, description, status, priority, categoryId, dueDate, completedAt } : t))
+      setTasks(prev => prev.map(t => t.id === editId ? { ...t, title, description, status, priority, categoryId, dueDate, completedAt, subtasks: mergedSubtasks } : t))
     } else {
       const completed_at = status === 'done' ? new Date().toISOString() : null
       const { data, error } = await supabase.from('tasks').insert({
         title, description, status, priority, category_id: categoryId,
         due_date, completed_at, user_id: session!.user.id,
+        subtasks: subtasks ?? [],
       }).select().single()
       if (error) { console.error('saveTask insert error:', error); return false }
       if (data) setTasks(prev => [...prev, mapTask(data as TaskRow)])
     }
     return true
+  }
+
+  async function updateTaskSubtasks(id: string, subtasks: Subtask[]) {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, subtasks } : t))
+    await supabase.from('tasks').update({ subtasks }).eq('id', id)
   }
 
   async function moveTask(id: string, status: Status) {
@@ -254,26 +311,81 @@ export default function App() {
     await supabase.from('tasks').update({ description }).eq('id', id)
   }
 
-  async function deleteTask(id: string) {
-    const { error } = await supabase.from('tasks').delete().eq('id', id)
-    if (!error) setTasks(prev => prev.filter(t => t.id !== id))
+  const [pendingDelete, setPendingDelete] = useState<{ task: Task; timeoutId: ReturnType<typeof setTimeout> } | null>(null)
+
+  async function commitDelete(task: Task) {
+    await supabase.from('tasks').delete().eq('id', task.id)
   }
+
+  function deleteTask(id: string) {
+    const task = tasks.find(t => t.id === id)
+    if (!task) return
+
+    // If another delete is pending, commit it immediately
+    if (pendingDelete) {
+      clearTimeout(pendingDelete.timeoutId)
+      commitDelete(pendingDelete.task)
+    }
+
+    // Optimistically remove from UI
+    setTasks(prev => prev.filter(t => t.id !== id))
+
+    const timeoutId = setTimeout(() => {
+      commitDelete(task)
+      setPendingDelete(null)
+    }, 5000)
+
+    setPendingDelete({ task, timeoutId })
+  }
+
+  function undoDelete() {
+    if (!pendingDelete) return
+    clearTimeout(pendingDelete.timeoutId)
+    setTasks(prev => {
+      const next = [...prev, pendingDelete.task]
+      return next.sort((a, b) => a.createdAt - b.createdAt)
+    })
+    setPendingDelete(null)
+  }
+
+  useEffect(() => {
+    if (!pendingDelete) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') { e.stopPropagation(); undoDelete() }
+    }
+    document.addEventListener('keydown', onKeyDown, true)
+    return () => document.removeEventListener('keydown', onKeyDown, true)
+  }, [pendingDelete]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Categories ─────────────────────────────────────────────────────────────
 
-  async function addCategory(label: string): Promise<Category | null> {
+  async function deleteCategory(id: string) {
+    // Fallback: first category that isn't the one being deleted
+    const fallback = envCategories.find(c => c.id !== id)
+    if (!fallback) return
+
+    // Optimistic update
+    setTasks(prev => prev.map(t => t.categoryId === id ? { ...t, categoryId: fallback.id } : t))
+    setCustomCategories(prev => prev.filter(c => c.id !== id))
+    if (activeFilter === id) setActiveFilter(null)
+
+    // Persist to DB
+    await supabase.from('tasks').update({ category_id: fallback.id }).eq('category_id', id)
+    await supabase.from('categories').delete().eq('id', id)
+  }
+
+  async function addCategory(label: string, color?: string): Promise<Category | null> {
     const trimmed = label.trim()
     if (!trimmed) return null
     const isDuplicate = categories.some(c => c.label.toLowerCase() === trimmed.toLowerCase())
     if (isDuplicate) return null
     const id = trimmed.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-    const colorIndex = customCategories.length % CATEGORY_COLOR_PALETTE.length
-    const color = CATEGORY_COLOR_PALETTE[colorIndex]
+    const chosenColor = color ?? CATEGORY_COLOR_PALETTE[customCategories.length % CATEGORY_COLOR_PALETTE.length]
     const { error } = await supabase.from('categories').insert({
-      id, label: trimmed, color, user_id: session!.user.id,
+      id, label: trimmed, color: chosenColor, user_id: session!.user.id,
     })
     if (error) return null
-    const newCat: Category = { id, label: trimmed, color }
+    const newCat: Category = { id, label: trimmed, color: chosenColor }
     setCustomCategories(prev => [...prev, newCat])
     return newCat
   }
@@ -294,7 +406,65 @@ export default function App() {
     }
   }
 
+  // ── Notifications ─────────────────────────────────────────────────────────
+
+  const urgentTasks = (() => {
+    const todayMidnight = new Date(new Date().setHours(0, 0, 0, 0)).getTime()
+    return tasks
+      .filter(t => t.dueDate != null && t.status !== 'done')
+      .map(t => {
+        const due = new Date(t.dueDate!)
+        const dueMidnight = new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime()
+        const days = Math.round((dueMidnight - todayMidnight) / 86400000)
+        return { task: t, days }
+      })
+      .filter(({ days }) => days <= 3)
+      .sort((a, b) => a.days - b.days)
+  })()
+
+  const notifBadgeCount = urgentTasks.filter(({ days, task }) => days <= 0 && !readNotifIds.has(task.id)).length
+
+  function markAllRead() {
+    setReadNotifIds(new Set(urgentTasks.map(({ task }) => task.id)))
+  }
+
+  function openNotif() {
+    if (!notifBtnRef.current) return
+    const rect = notifBtnRef.current.getBoundingClientRect()
+    const panelWidth = Math.min(320, window.innerWidth - 16)
+    const naturalRight = window.innerWidth - rect.right
+    // Clamp so the panel never overflows the left edge
+    const right = Math.min(naturalRight, window.innerWidth - panelWidth - 8)
+    setNotifPanelPos({ top: rect.bottom + 8, right })
+    setNotifOpen(true)
+  }
+
+  function getDaysLabel(days: number): { label: string; color: string; dot: string } {
+    if (days < 0) return { label: 'En retard', color: 'text-red-600', dot: 'bg-red-500' }
+    if (days === 0) return { label: 'Aujourd\'hui', color: 'text-red-600', dot: 'bg-red-500' }
+    if (days === 1) return { label: 'Demain', color: 'text-orange-600', dot: 'bg-orange-400' }
+    return { label: `Dans ${days} jours`, color: 'text-amber-600', dot: 'bg-amber-400' }
+  }
+
+  async function restoreTask(id: string) {
+    const { error } = await supabase.from('tasks').update({ status: 'todo', completed_at: null }).eq('id', id)
+    if (!error) setTasks(prev => prev.map(t => t.id === id ? { ...t, status: 'todo' as Status, completedAt: undefined } : t))
+  }
+
   // ── Derived ───────────────────────────────────────────────────────────────
+
+  const todayMidnight = new Date(new Date().setHours(0, 0, 0, 0)).getTime()
+  const overdueTaskIds = new Set(
+    envTasks
+      .filter(t => t.status !== 'done' && t.dueDate != null && t.dueDate < todayMidnight)
+      .map(t => t.id)
+  )
+  const overdueCount = overdueTaskIds.size
+
+  const archivedTasks = tasks
+    .filter(t => envCategories.some(c => c.id === t.categoryId))
+    .filter(t => t.status === 'done' && t.completedAt != null && Date.now() - t.completedAt > ARCHIVE_THRESHOLD)
+    .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0))
 
   const editingTask = modal.open && modal.editId ? tasks.find(t => t.id === modal.editId) : undefined
   const activeTask = activeTaskId ? tasks.find(t => t.id === activeTaskId) ?? null : null
@@ -410,6 +580,23 @@ export default function App() {
               </svg>
             )}
           </button>
+          {/* Notification bell */}
+          <button
+            ref={notifBtnRef}
+            onClick={() => notifOpen ? setNotifOpen(false) : openNotif()}
+            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors cursor-pointer relative ${notifOpen ? 'bg-teal-50 text-teal-600' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
+            aria-label="Notifications"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            {notifBadgeCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none">
+                {notifBadgeCount}
+              </span>
+            )}
+          </button>
+
           {/* Env pill switcher */}
           <div className="flex bg-slate-100 rounded-xl p-1 gap-1" role="group" aria-label="Environnement">
             {(['pro', 'perso'] as Env[]).map(e => (
@@ -461,6 +648,78 @@ export default function App() {
         </div>
       </header>
 
+      {/* Notification panel */}
+      {notifOpen && notifPanelPos && createPortal(
+        <div
+          ref={notifPanelRef}
+          style={{ position: 'fixed', top: notifPanelPos.top, right: notifPanelPos.right, zIndex: 9999, width: 'min(320px, calc(100vw - 16px))' }}
+          className="bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-scale-in"
+        >
+          {/* Panel header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+            <span className="text-sm font-bold text-slate-800">
+              Notifications
+              {urgentTasks.length > 0 && (
+                <span className="ml-1.5 text-xs font-semibold text-slate-400">· {urgentTasks.length}</span>
+              )}
+            </span>
+            {urgentTasks.length > 0 && notifBadgeCount > 0 && (
+              <button
+                onClick={markAllRead}
+                className="text-xs font-semibold text-teal-600 hover:text-teal-800 transition-colors cursor-pointer"
+              >
+                Tout marquer lu
+              </button>
+            )}
+          </div>
+
+          {/* Panel body */}
+          {urgentTasks.length === 0 ? (
+            <div className="px-4 py-8 text-center">
+              <div className="text-2xl mb-2">✅</div>
+              <p className="text-sm font-semibold text-slate-600">Tout est à jour</p>
+              <p className="text-xs text-slate-400 mt-1">Aucune tâche urgente</p>
+            </div>
+          ) : (
+            <div className="max-h-80 overflow-y-auto">
+              {urgentTasks.map(({ task, days }) => {
+                const { label, color, dot } = getDaysLabel(days)
+                const isUnread = days <= 0 && !readNotifIds.has(task.id)
+                const cat = categories.find(c => c.id === task.categoryId)
+                return (
+                  <button
+                    key={task.id}
+                    onClick={() => {
+                      setNotifOpen(false)
+                      setReadNotifIds(prev => new Set([...prev, task.id]))
+                      setModal({ open: true, status: task.status, editId: task.id })
+                    }}
+                    className="w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 cursor-pointer group"
+                  >
+                    <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${isUnread ? dot : 'bg-slate-200'}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold truncate ${isUnread ? 'text-slate-800' : 'text-slate-500'}`}>
+                        {task.title}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className={`text-xs font-semibold ${color}`}>{label}</span>
+                        {cat && (
+                          <span className="text-xs text-slate-400 truncate">{cat.label}</span>
+                        )}
+                      </div>
+                    </div>
+                    <svg className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500 transition-colors shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
+
       {/* Env banner */}
       <div className={`${envConf.bg} px-6 py-2 flex items-center gap-2`} role="status" aria-live="polite">
         <span className="text-base leading-none" aria-hidden="true">{envConf.icon}</span>
@@ -474,14 +733,71 @@ export default function App() {
       <FilterBar
         categories={envCategories}
         activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
+        onFilterChange={id => { setActiveFilter(id); setShowArchive(false); setShowOverdue(false) }}
         onAddCategory={addCategory}
+        onDeleteCategory={deleteCategory}
         hiddenCategories={hiddenCategories}
         onToggleHideCategory={toggleHideCategory}
+        showArchive={showArchive}
+        onToggleArchive={toggleArchive}
+        archiveCount={archivedTasks.length}
+        showOverdue={showOverdue}
+        onToggleOverdue={toggleOverdue}
+        overdueCount={overdueCount}
       />
 
+      {/* Archive view */}
+      {showArchive && (
+        <main className="p-4 sm:p-6 max-w-2xl mx-auto">
+          <div className="flex items-center gap-2 mb-4">
+            <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12"/>
+            </svg>
+            <h2 className="text-sm font-bold text-amber-800">Archive — {archivedTasks.length} tâche{archivedTasks.length > 1 ? 's' : ''}</h2>
+            <span className="text-xs text-amber-600 ml-1">(terminées il y a plus de 15 jours)</span>
+          </div>
+          {archivedTasks.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-12">Aucune tâche archivée</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {archivedTasks.map(task => {
+                const cat = categories.find(c => c.id === task.categoryId)
+                const daysAgo = task.completedAt ? Math.floor((Date.now() - task.completedAt) / 86400000) : 0
+                return (
+                  <div key={task.id} className="bg-white border border-amber-100 rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-400 line-through truncate">{task.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        {cat && (
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: cat.color }}>
+                            {cat.label}
+                          </span>
+                        )}
+                        <span className="text-xs text-slate-400">
+                          Terminé il y a {daysAgo} jour{daysAgo > 1 ? 's' : ''}
+                          {task.completedAt && ` · ${new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(task.completedAt))}`}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => restoreTask(task.id)}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 border border-teal-200 px-3 py-1.5 rounded-lg hover:bg-teal-50 transition-colors cursor-pointer shrink-0"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                      </svg>
+                      Restaurer
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </main>
+      )}
+
       {/* Board */}
-      {isMobile ? (
+      {!showArchive && (isMobile ? (
         <>
           {/* Tab bar */}
           <div className="bg-white border-b border-slate-200 flex sticky top-[113px] z-10">
@@ -525,6 +841,8 @@ export default function App() {
               allStatuses={COLUMNS}
               hiddenCategories={hiddenCategories}
               searchQuery={searchQuery}
+              overdueFilter={showOverdue}
+              overdueTaskIds={overdueTaskIds}
             />
           </main>
         </>
@@ -546,6 +864,8 @@ export default function App() {
                 allStatuses={COLUMNS}
                 hiddenCategories={hiddenCategories}
                 searchQuery={searchQuery}
+                overdueFilter={showOverdue}
+                overdueTaskIds={overdueTaskIds}
               />
             ))}
           </main>
@@ -564,6 +884,39 @@ export default function App() {
             ) : null}
           </DragOverlay>
         </DndContext>
+      ))}
+
+      {/* Undo delete snackbar */}
+      {pendingDelete && (
+        <div
+          key={pendingDelete.task.id}
+          style={{ animation: 'slideUpFade 0.25s cubic-bezier(0.16,1,0.3,1)' }}
+          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[min(360px,calc(100vw-32px))]"
+          role="status"
+          aria-live="polite"
+          data-testid="undo-snackbar"
+        >
+          <div className="bg-slate-800 rounded-2xl shadow-xl overflow-hidden">
+            <div className="flex items-center gap-3 px-4 py-3">
+              <span className="text-base" aria-hidden="true">🗑</span>
+              <span className="flex-1 text-sm text-slate-200 font-medium truncate">
+                &ldquo;{pendingDelete.task.title}&rdquo; supprimée
+              </span>
+              <button
+                onClick={undoDelete}
+                className="text-sm font-bold text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer shrink-0 ml-1"
+              >
+                ↩ Annuler
+              </button>
+            </div>
+            <div className="h-1 bg-slate-700">
+              <div
+                className="h-full bg-emerald-400 rounded-full"
+                style={{ animation: 'shrink 5s linear forwards' }}
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modal */}
@@ -575,6 +928,7 @@ export default function App() {
           task={editingTask}
           onSave={saveTask}
           onAddCategory={addCategory}
+          onUpdateSubtasks={updateTaskSubtasks}
           onClose={() => setModal({ open: false })}
         />
       )}

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Feature 7 — Couleur des catégories</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; padding: 24px; }
+  h1 { font-size: 14px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+  .subtitle { font-size: 12px; color: #94a3b8; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .option { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
+  .option-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .1em; padding: 14px 16px 0; }
+  .option-title { font-size: 15px; font-weight: 700; color: #0f172a; padding: 4px 16px 12px; border-bottom: 1px solid #f1f5f9; }
+  .preview { padding: 16px; min-height: 360px; }
+
+  /* Shared UI */
+  .app-header { background: #134E4A; padding: 8px 12px; border-radius: 8px 8px 0 0; display: flex; align-items: center; }
+  .app-title { color: white; font-weight: 700; font-size: 12px; }
+  .filterbar { background: white; border-bottom: 1px solid #f1f5f9; padding: 6px 10px; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; border: 1px solid #e2e8f0; border-top: none; }
+  .chip { font-size: 9px; font-weight: 600; padding: 3px 8px; border-radius: 9999px; cursor: pointer; }
+  .chip-active { background: #134E4A; color: white; }
+  .chip-normal { background: #f1f5f9; color: #64748b; }
+  .chip-cat { color: white; }
+
+  /* Input zone */
+  .input-zone { background: #f8fafc; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px; padding: 10px; }
+  .input-row { display: flex; gap: 6px; align-items: center; }
+  .fake-input { flex: 1; background: white; border: 1.5px solid #99f6e4; border-radius: 8px; padding: 5px 8px; font-size: 9px; color: #64748b; }
+  .btn-create { background: #0d9488; color: white; font-size: 9px; font-weight: 700; padding: 5px 10px; border-radius: 8px; cursor: pointer; }
+  .btn-cancel { font-size: 9px; color: #94a3b8; cursor: pointer; }
+
+  /* Option A — palette fixe */
+  .palette { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+  .swatch { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; }
+  .swatch-selected { outline: 2.5px solid #0f172a; outline-offset: 2px; }
+  .color-preview { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+  /* Option B — native color input */
+  .native-color { width: 28px; height: 28px; border-radius: 8px; border: 1.5px solid #e2e8f0; cursor: pointer; padding: 2px; background: white; }
+  .native-row { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
+  .native-label { font-size: 9px; color: #64748b; }
+  .color-chip-preview { height: 22px; padding: 0 8px; border-radius: 9999px; font-size: 9px; font-weight: 700; color: white; display: flex; align-items: center; }
+
+  /* Option C — swatches inline dans l'input row */
+  .inline-swatches { display: flex; gap: 4px; align-items: center; }
+  .inline-swatch { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; shrink: 0; }
+
+  .desc { padding: 12px 16px; border-top: 1px solid #f1f5f9; }
+  .desc p { font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 6px; }
+  .pro { color: #16a34a; font-weight: 600; }
+  .con { color: #dc2626; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Feature 7 — Couleur des catégories custom · 3 propositions</h1>
+<p class="subtitle">Aujourd'hui, la couleur est assignée automatiquement par rotation. L'utilisateur ne peut pas la choisir.</p>
+<div class="grid">
+
+  <!-- ══ OPTION A : Palette fixe de swatches ════════════════════════ -->
+  <div class="option">
+    <div class="option-label">Option A</div>
+    <div class="option-title">Palette de couleurs prédéfinies</div>
+    <div class="preview">
+      <div class="app-header"><span class="app-title">📋 Kanban</span></div>
+      <div class="filterbar">
+        <span class="chip chip-active">Toutes</span>
+        <span class="chip chip-cat" style="background:#0d9488;">Ops</span>
+        <span class="chip chip-cat" style="background:#7c3aed;">IA</span>
+        <span class="chip chip-cat" style="background:#ea580c;">Perso</span>
+      </div>
+      <div class="input-zone">
+        <div style="font-size:9px;color:#64748b;font-weight:600;margin-bottom:6px;">Nouvelle catégorie</div>
+        <div class="input-row">
+          <div class="fake-input">Marketing</div>
+          <div class="btn-create">Créer</div>
+          <div class="btn-cancel">✕</div>
+        </div>
+        <!-- Color palette below input -->
+        <div style="margin-top:8px;">
+          <div style="font-size:8px;color:#94a3b8;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Couleur</div>
+          <div class="palette">
+            <div class="swatch" style="background:#0d9488;"></div>
+            <div class="swatch" style="background:#7c3aed;"></div>
+            <div class="swatch" style="background:#ea580c;"></div>
+            <div class="swatch" style="background:#dc2626;"></div>
+            <div class="swatch" style="background:#d97706;"></div>
+            <div class="swatch swatch-selected" style="background:#2563eb;"></div>
+            <div class="swatch" style="background:#db2777;"></div>
+            <div class="swatch" style="background:#16a34a;"></div>
+            <div class="swatch" style="background:#0891b2;"></div>
+            <div class="swatch" style="background:#9f1239;"></div>
+          </div>
+        </div>
+        <!-- Preview of the chip with chosen color -->
+        <div style="margin-top:10px;display:flex;align-items:center;gap:6px;">
+          <span class="chip chip-cat" style="background:#2563eb;">Marketing</span>
+          <span style="font-size:8px;color:#94a3b8;">aperçu</span>
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <p>Lors de la création d'une catégorie, une palette de 10 couleurs s'affiche sous le champ texte. L'utilisateur clique sur une couleur pour la sélectionner — l'aperçu du chip se met à jour en temps réel.</p>
+      <p><span class="pro">✓</span> Simple, rapide, cohérent visuellement<br>
+         <span class="pro">✓</span> Pas de risque de couleurs illisibles<br>
+         <span class="pro">✓</span> Aperçu instantané du chip<br>
+         <span class="con">✗</span> Choix limité à 10 couleurs</p>
+    </div>
+  </div>
+
+  <!-- ══ OPTION B : Color picker natif ══════════════════════════════ -->
+  <div class="option">
+    <div class="option-label">Option B</div>
+    <div class="option-title">Color picker natif du navigateur</div>
+    <div class="preview">
+      <div class="app-header"><span class="app-title">📋 Kanban</span></div>
+      <div class="filterbar">
+        <span class="chip chip-active">Toutes</span>
+        <span class="chip chip-cat" style="background:#0d9488;">Ops</span>
+        <span class="chip chip-cat" style="background:#7c3aed;">IA</span>
+        <span class="chip chip-cat" style="background:#ea580c;">Perso</span>
+      </div>
+      <div class="input-zone">
+        <div style="font-size:9px;color:#64748b;font-weight:600;margin-bottom:6px;">Nouvelle catégorie</div>
+        <div class="input-row">
+          <div class="fake-input">Design</div>
+          <div class="btn-create">Créer</div>
+          <div class="btn-cancel">✕</div>
+        </div>
+        <div class="native-row">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="color" value="#e11d48" class="native-color" />
+            <span class="native-label">Couleur du chip</span>
+          </label>
+          <div class="color-chip-preview" style="background:#e11d48;">Design</div>
+          <span style="font-size:8px;color:#94a3b8;">aperçu</span>
+        </div>
+        <div style="margin-top:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:6px 8px;font-size:8px;color:#1d4ed8;">
+          🖥 Ouvre le sélecteur de couleur natif du système (macOS / Windows / Android)
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <p>Un <code>&lt;input type="color"&gt;</code> s'affiche sous le champ texte. Clic → ouvre le color picker natif du système d'exploitation, avec accès à toutes les couleurs et aux couleurs récentes.</p>
+      <p><span class="pro">✓</span> Liberté totale de couleur<br>
+         <span class="pro">✓</span> Natif = zéro code à écrire<br>
+         <span class="pro">✓</span> Couleurs récentes mémorisées<br>
+         <span class="con">✗</span> UI du picker différente sur chaque OS<br>
+         <span class="con">✗</span> Risque de couleurs illisibles (trop claires)</p>
+    </div>
+  </div>
+
+  <!-- ══ OPTION C : Swatches inline dans la ligne d'input ═══════════ -->
+  <div class="option">
+    <div class="option-label">Option C</div>
+    <div class="option-title">Swatches intégrées dans la ligne</div>
+    <div class="preview">
+      <div class="app-header"><span class="app-title">📋 Kanban</span></div>
+      <div class="filterbar">
+        <span class="chip chip-active">Toutes</span>
+        <span class="chip chip-cat" style="background:#0d9488;">Ops</span>
+        <span class="chip chip-cat" style="background:#7c3aed;">IA</span>
+        <span class="chip chip-cat" style="background:#ea580c;">Perso</span>
+      </div>
+      <div class="input-zone">
+        <div style="font-size:9px;color:#64748b;font-weight:600;margin-bottom:6px;">Nouvelle catégorie</div>
+        <!-- Color dot + input + swatches on same line -->
+        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
+          <!-- Selected color dot acts as indicator -->
+          <div style="width:14px;height:14px;border-radius:50%;background:#7c3aed;shrink:0;"></div>
+          <div class="fake-input" style="flex:1;min-width:80px;">Produit</div>
+          <div class="btn-create">Créer</div>
+          <div class="btn-cancel">✕</div>
+        </div>
+        <!-- Swatches row below -->
+        <div style="display:flex;gap:5px;align-items:center;margin-top:7px;flex-wrap:wrap;">
+          <div class="inline-swatch" style="background:#0d9488;"></div>
+          <div class="inline-swatch" style="background:#7c3aed;outline:2.5px solid #0f172a;outline-offset:2px;"></div>
+          <div class="inline-swatch" style="background:#ea580c;"></div>
+          <div class="inline-swatch" style="background:#dc2626;"></div>
+          <div class="inline-swatch" style="background:#d97706;"></div>
+          <div class="inline-swatch" style="background:#2563eb;"></div>
+          <div class="inline-swatch" style="background:#db2777;"></div>
+          <div class="inline-swatch" style="background:#16a34a;"></div>
+          <span style="font-size:8px;color:#94a3b8;margin-left:4px;">→</span>
+          <span class="chip chip-cat" style="background:#7c3aed;font-size:8px;">Produit</span>
+        </div>
+      </div>
+      <!-- Show final result in filterbar preview -->
+      <div style="margin-top:10px;">
+        <div style="font-size:8px;color:#94a3b8;margin-bottom:4px;text-transform:uppercase;font-weight:600;letter-spacing:.05em;">Résultat dans la FilterBar</div>
+        <div class="filterbar" style="border-radius:6px;">
+          <span class="chip chip-active">Toutes</span>
+          <span class="chip chip-cat" style="background:#0d9488;">Ops</span>
+          <span class="chip chip-cat" style="background:#7c3aed;">Produit</span>
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <p>Les swatches s'affichent directement sous le champ de création, compactes et accessibles. Un dot de couleur à gauche de l'input indique la couleur sélectionnée. L'aperçu du chip est visible en temps réel.</p>
+      <p><span class="pro">✓</span> Compact, tout visible en une ligne<br>
+         <span class="pro">✓</span> Aperçu instantané dans la filterbar<br>
+         <span class="pro">✓</span> UX mobile-friendly<br>
+         <span class="con">✗</span> Choix limité (mais même palette qu'Option A)</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

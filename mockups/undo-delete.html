@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Feature 3 — Undo suppression mockups</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; padding: 24px; }
+  h1 { font-size: 14px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .option { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
+  .option-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .1em; padding: 14px 16px 0; }
+  .option-title { font-size: 15px; font-weight: 700; color: #0f172a; padding: 4px 16px 12px; border-bottom: 1px solid #f1f5f9; }
+  .preview { padding: 16px; position: relative; min-height: 340px; }
+
+  /* ── SHARED ── */
+  .app-shell { border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; background: #f8fafc; }
+  .app-header { background: #134E4A; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .app-header-title { color: white; font-weight: 700; font-size: 13px; }
+  .col-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; }
+  .col-title { font-size: 11px; font-weight: 700; color: #134E4A; }
+  .col-body { padding: 8px; display: flex; flex-direction: column; gap: 5px; }
+  .task-card { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 8px 10px; font-size: 11px; display: flex; align-items: center; justify-content: space-between; }
+  .task-title { font-weight: 600; color: #134E4A; }
+  .task-tag { font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 9999px; background: #f0fdf4; color: #16a34a; }
+  .task-card-deleted { opacity: 0.35; background: #fff5f5; border-color: #fecaca; position: relative; }
+  .task-card-deleted::after { content: 'Supprimée'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #ef4444; background: rgba(255,245,245,0.7); border-radius: 8px; }
+  .btn-icon { width: 22px; height: 22px; border-radius: 6px; border: none; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; }
+  .btn-del { background: #fee2e2; color: #ef4444; }
+
+  /* ── OPTION A : Snackbar undo (style Gmail) ── */
+  .snackbar { position: absolute; bottom: 16px; left: 12px; right: 12px; background: #1e293b; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; box-shadow: 0 4px 20px rgba(0,0,0,.2); }
+  .snackbar-msg { font-size: 11px; color: #e2e8f0; font-weight: 500; flex: 1; }
+  .snackbar-timer { font-size: 10px; color: #94a3b8; }
+  .snackbar-undo { font-size: 11px; font-weight: 700; color: #34d399; cursor: pointer; white-space: nowrap; }
+  .progress-bar { height: 3px; background: #334155; border-radius: 0 0 12px 12px; margin-top: 6px; overflow: hidden; }
+  .progress-fill { height: 100%; width: 40%; background: #34d399; border-radius: 9999px; }
+
+  /* ── OPTION B : Confirmation dialog ── */
+  .overlay { position: absolute; inset: 0; background: rgba(15,23,42,0.45); display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+  .dialog { background: white; border-radius: 14px; padding: 18px; width: calc(100% - 32px); box-shadow: 0 8px 32px rgba(0,0,0,.18); }
+  .dialog-icon { width: 40px; height: 40px; border-radius: 12px; background: #fee2e2; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 10px; }
+  .dialog-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+  .dialog-msg { font-size: 11px; color: #64748b; line-height: 1.4; margin-bottom: 14px; }
+  .dialog-actions { display: flex; gap: 6px; }
+  .btn-sm { flex: 1; padding: 8px; border-radius: 8px; border: none; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .btn-cancel { background: #f1f5f9; color: #475569; }
+  .btn-confirm { background: #ef4444; color: white; }
+
+  /* ── OPTION C : Swipe to delete (mobile) ── */
+  .swipe-wrap { position: relative; border-radius: 8px; overflow: hidden; margin-bottom: 5px; }
+  .swipe-bg { position: absolute; inset: 0; background: #ef4444; display: flex; align-items: center; justify-content: flex-end; padding-right: 12px; }
+  .swipe-bg-icon { color: white; font-size: 14px; display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; }
+  .swipe-card { position: relative; transform: translateX(-60px); background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 8px 10px; font-size: 11px; display: flex; align-items: center; justify-content: space-between; }
+  .swipe-card-normal { transform: translateX(0); }
+  .swipe-arrow { font-size: 10px; color: #94a3b8; }
+  .undo-chip { display: inline-flex; align-items: center; gap: 4px; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 9999px; padding: 3px 8px; font-size: 10px; font-weight: 600; color: #059669; margin-top: 6px; cursor: pointer; }
+
+  /* descriptions */
+  .desc { padding: 12px 16px; border-top: 1px solid #f1f5f9; }
+  .desc p { font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 6px; }
+  .pro { color: #16a34a; font-weight: 600; }
+  .con { color: #dc2626; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Feature 3 — Undo suppression · 3 propositions</h1>
+<div class="grid">
+
+  <!-- ══ OPTION A : Snackbar undo (5s) ══════════════════════════════ -->
+  <div class="option">
+    <div class="option-label">Option A</div>
+    <div class="option-title">Snackbar "Annuler" — 5 secondes</div>
+    <div class="preview">
+      <div class="app-shell">
+        <div class="app-header"><span class="app-header-title">📋 Kanban</span></div>
+        <div class="col-header">
+          <span class="col-title">À faire <span style="font-size:10px;color:#94a3b8;">· 3</span></span>
+        </div>
+        <div class="col-body">
+          <div class="task-card task-card-deleted">
+            <span class="task-title">Appel client Dupont</span>
+            <span class="task-tag">Haute</span>
+          </div>
+          <div class="task-card">
+            <span class="task-title">Préparer réunion Q2</span>
+            <span class="task-tag">Moyenne</span>
+          </div>
+          <div class="task-card">
+            <span class="task-title">Mise à jour doc</span>
+            <span class="task-tag">Basse</span>
+          </div>
+        </div>
+      </div>
+      <!-- Snackbar flottante -->
+      <div style="margin-top: 10px;">
+        <div class="snackbar">
+          <span class="snackbar-msg">🗑 Tâche supprimée</span>
+          <span class="snackbar-timer">4s</span>
+          <span class="snackbar-undo">↩ Annuler</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill"></div></div>
+      </div>
+    </div>
+    <div class="desc">
+      <p>La tâche est supprimée immédiatement mais une snackbar apparaît en bas pendant 5 secondes avec un bouton "Annuler". Une barre de progression montre le temps restant. Si ignorée, la suppression est définitive.</p>
+      <p><span class="pro">✓</span> Rapide, non bloquant (pas de clic supplémentaire)<br>
+         <span class="pro">✓</span> Pattern standard (Gmail, Notion, Linear…)<br>
+         <span class="pro">✓</span> Fonctionne parfaitement mobile et desktop<br>
+         <span class="con">✗</span> Fenêtre de 5s courte si on ne regarde pas</p>
+    </div>
+  </div>
+
+  <!-- ══ OPTION B : Dialog de confirmation ══════════════════════════ -->
+  <div class="option">
+    <div class="option-label">Option B</div>
+    <div class="option-title">Dialog de confirmation</div>
+    <div class="preview">
+      <div class="app-shell" style="position:relative;">
+        <div class="app-header"><span class="app-header-title">📋 Kanban</span></div>
+        <div class="col-header">
+          <span class="col-title">À faire <span style="font-size:10px;color:#94a3b8;">· 3</span></span>
+        </div>
+        <div class="col-body">
+          <div class="task-card">
+            <span class="task-title">Appel client Dupont</span>
+            <span class="task-tag">Haute</span>
+          </div>
+          <div class="task-card">
+            <span class="task-title">Préparer réunion Q2</span>
+            <span class="task-tag">Moyenne</span>
+          </div>
+        </div>
+        <div class="overlay">
+          <div class="dialog">
+            <div class="dialog-icon">🗑</div>
+            <div class="dialog-title">Supprimer la tâche ?</div>
+            <div class="dialog-msg">"Appel client Dupont" sera définitivement supprimée. Cette action est irréversible.</div>
+            <div class="dialog-actions">
+              <button class="btn-sm btn-cancel">Annuler</button>
+              <button class="btn-sm btn-confirm">Supprimer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <p>Un dialog de confirmation s'affiche avant chaque suppression. L'utilisateur doit confirmer explicitement. Aucun risque de suppression accidentelle.</p>
+      <p><span class="pro">✓</span> Zéro risque de suppression involontaire<br>
+         <span class="pro">✓</span> Simple à implémenter<br>
+         <span class="con">✗</span> Friction à chaque suppression (2 clics au lieu de 1)<br>
+         <span class="con">✗</span> Pattern daté — les apps modernes préfèrent l'undo</p>
+    </div>
+  </div>
+
+  <!-- ══ OPTION C : Swipe-to-delete + undo chip (mobile-first) ══════ -->
+  <div class="option">
+    <div class="option-label">Option C</div>
+    <div class="option-title">Swipe-to-delete + chip Annuler</div>
+    <div class="preview">
+      <div class="app-shell">
+        <div class="app-header"><span class="app-header-title">📋 Kanban</span></div>
+        <div class="col-header">
+          <span class="col-title">À faire <span style="font-size:10px;color:#94a3b8;">· 3</span></span>
+        </div>
+        <div class="col-body" style="padding: 8px;">
+          <!-- Swipe en cours -->
+          <div class="swipe-wrap">
+            <div class="swipe-bg">
+              <div class="swipe-bg-icon">🗑 Supprimer</div>
+            </div>
+            <div class="swipe-card">
+              <span class="task-title" style="color:#134E4A;">Appel client Dupont</span>
+              <span style="font-size:10px;color:#94a3b8;">← glisser</span>
+            </div>
+          </div>
+          <!-- Tâche normale -->
+          <div class="swipe-wrap">
+            <div class="swipe-bg"><div class="swipe-bg-icon">🗑 Supprimer</div></div>
+            <div class="swipe-card swipe-card-normal">
+              <span class="task-title" style="color:#134E4A;">Préparer réunion Q2</span>
+              <span class="swipe-arrow">···</span>
+            </div>
+          </div>
+          <div class="swipe-wrap">
+            <div class="swipe-bg"><div class="swipe-bg-icon">🗑 Supprimer</div></div>
+            <div class="swipe-card swipe-card-normal">
+              <span class="task-title" style="color:#134E4A;">Mise à jour doc</span>
+              <span class="swipe-arrow">···</span>
+            </div>
+          </div>
+          <!-- Chip undo -->
+          <div style="display:flex;justify-content:center;padding-top:4px;">
+            <div class="undo-chip">↩ Annuler la suppression</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <p>Sur mobile : swipe gauche pour révéler l'action "Supprimer". Sur desktop : bouton dans le menu contextuel (inchangé). Dans les deux cas, un chip "Annuler" apparaît brièvement en bas de colonne pendant 5s.</p>
+      <p><span class="pro">✓</span> Geste naturel et rapide sur mobile<br>
+         <span class="pro">✓</span> Undo toujours disponible<br>
+         <span class="con">✗</span> Complexe à implémenter (gestion du swipe + dnd-kit)<br>
+         <span class="con">✗</span> Conflit potentiel avec le drag-and-drop desktop</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

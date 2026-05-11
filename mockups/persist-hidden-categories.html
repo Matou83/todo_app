@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Feature 5 — Persistance catégories cachées</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; padding: 24px; }
+  h1 { font-size: 14px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .option { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
+  .option-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .1em; padding: 14px 16px 0; }
+  .option-title { font-size: 15px; font-weight: 700; color: #0f172a; padding: 4px 16px 12px; border-bottom: 1px solid #f1f5f9; }
+  .preview { padding: 16px; min-height: 320px; }
+
+  /* ── SHARED ── */
+  .browser-bar { background: #e2e8f0; border-radius: 8px 8px 0 0; padding: 6px 10px; display: flex; align-items: center; gap: 6px; }
+  .browser-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .browser-url { flex: 1; background: white; border-radius: 4px; padding: 3px 8px; font-size: 10px; color: #64748b; font-family: monospace; }
+  .app { border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px; overflow: hidden; }
+  .app-header { background: #134E4A; padding: 8px 12px; }
+  .app-header-title { color: white; font-weight: 700; font-size: 12px; }
+  .filterbar { background: white; border-bottom: 1px solid #f1f5f9; padding: 6px 10px; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+  .chip { font-size: 9px; font-weight: 600; padding: 3px 8px; border-radius: 9999px; }
+  .chip-active { background: #134E4A; color: white; }
+  .chip-normal { background: #f1f5f9; color: #64748b; }
+  .chip-hidden { background: #f1f5f9; color: #94a3b8; outline: 2px solid; outline-offset: 1px; }
+  .board { padding: 8px; background: #f8fafc; display: flex; gap: 6px; }
+  .col { flex: 1; }
+  .col-title { font-size: 9px; font-weight: 700; color: #134E4A; background: white; border: 1px solid #e2e8f0; border-radius: 6px 6px 0 0; padding: 5px 7px; }
+  .col-body { background: white; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 6px 6px; padding: 5px; display: flex; flex-direction: column; gap: 3px; min-height: 50px; }
+  .task { font-size: 9px; font-weight: 600; color: #134E4A; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 4px 5px; }
+  .task-hidden { opacity: 0.3; filter: blur(3px); }
+
+  /* scenario arrows */
+  .scenario { display: flex; flex-direction: column; gap: 8px; }
+  .scene { background: #f8fafc; border-radius: 8px; padding: 8px; border: 1px solid #e2e8f0; }
+  .scene-label { font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+  .arrow { text-align: center; font-size: 14px; color: #94a3b8; }
+
+  /* storage indicators */
+  .storage-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 8px; margin-bottom: 8px; }
+  .storage-local { background: #eff6ff; color: #1d4ed8; }
+  .storage-server { background: #f0fdf4; color: #166534; }
+  .storage-url { background: #fef3c7; color: #92400e; }
+
+  /* device row */
+  .devices { display: flex; gap: 6px; }
+  .device { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; }
+  .device-label { font-size: 8px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 3px; }
+  .synced { color: #16a34a; }
+  .not-synced { color: #ef4444; }
+
+  /* desc */
+  .desc { padding: 12px 16px; border-top: 1px solid #f1f5f9; }
+  .desc p { font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 6px; }
+  .pro { color: #16a34a; font-weight: 600; }
+  .con { color: #dc2626; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Feature 5 — Persistance des catégories cachées · 3 propositions</h1>
+<div class="grid">
+
+  <!-- ══ OPTION A : localStorage ═══════════════════════════════════ -->
+  <div class="option">
+    <div class="option-label">Option A</div>
+    <div class="option-title">localStorage — instantané, zéro backend</div>
+    <div class="preview">
+      <div class="storage-badge storage-local">💾 Stockage local (navigateur)</div>
+      <div class="scenario">
+
+        <!-- Session 1 -->
+        <div class="scene">
+          <div class="scene-label">📅 Lundi — tu caches "Perso"</div>
+          <div class="filterbar">
+            <span class="chip chip-active">Toutes</span>
+            <span class="chip chip-normal">Ops</span>
+            <span class="chip chip-normal">IA</span>
+            <span class="chip chip-hidden" style="outline-color:#F97316;">Perso</span>
+          </div>
+          <div style="font-size:9px;color:#64748b;margin-top:4px;padding:0 2px;">
+            💾 Sauvegardé dans localStorage
+          </div>
+        </div>
+
+        <div class="arrow">↓ ferme l'onglet</div>
+
+        <!-- Session 2 -->
+        <div class="scene">
+          <div class="scene-label">📅 Mardi — réouverture de l'app</div>
+          <div class="filterbar">
+            <span class="chip chip-active">Toutes</span>
+            <span class="chip chip-normal">Ops</span>
+            <span class="chip chip-normal">IA</span>
+            <span class="chip chip-hidden" style="outline-color:#F97316;">Perso</span>
+          </div>
+          <div style="font-size:9px;color:#16a34a;margin-top:4px;padding:0 2px;">
+            ✓ "Perso" toujours cachée — restaurée depuis localStorage
+          </div>
+        </div>
+
+        <!-- Multi-device -->
+        <div class="scene">
+          <div class="scene-label" style="color:#ef4444;">⚠️ Mais sur un autre appareil…</div>
+          <div class="devices">
+            <div class="device">
+              <div class="device-label">💻 Mac <span class="not-synced">· caché</span></div>
+              <div class="filterbar" style="padding:3px 5px;">
+                <span class="chip chip-hidden" style="font-size:8px;outline-color:#F97316;">Perso</span>
+              </div>
+            </div>
+            <div class="device">
+              <div class="device-label">📱 iPhone <span class="not-synced">· visible</span></div>
+              <div class="filterbar" style="padding:3px 5px;">
+                <span class="chip chip-normal" style="font-size:8px;">Perso</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="desc">
+      <p>Les catégories cachées sont sauvegardées dans le localStorage du navigateur. La préférence persiste entre les sessions sur le même appareil.</p>
+      <p><span class="pro">✓</span> Instantané, zéro requête réseau<br>
+         <span class="pro">✓</span> Trivial à implémenter (2 lignes)<br>
+         <span class="pro">✓</span> Fonctionne sans compte Supabase<br>
+         <span class="con">✗</span> Non synchronisé entre appareils<br>
+         <span class="con">✗</span> Perdu si on vide le cache</p>
+    </div>
+  </div>
+
+  <!-- ══ OPTION B : Supabase user_settings ══════════════════════════ -->
+  <div class="option">
+    <div class="option-label">Option B</div>
+    <div class="option-title">Supabase — synchronisé tous appareils</div>
+    <div class="preview">
+      <div class="storage-badge storage-server">☁️ Stockage serveur (Supabase)</div>
+      <div class="scenario">
+
+        <div class="scene">
+          <div class="scene-label">📅 Lundi — tu caches "Perso" sur Mac</div>
+          <div class="filterbar">
+            <span class="chip chip-active">Toutes</span>
+            <span class="chip chip-normal">Ops</span>
+            <span class="chip chip-hidden" style="outline-color:#F97316;">Perso</span>
+          </div>
+          <div style="font-size:9px;color:#64748b;margin-top:4px;padding:0 2px;">
+            ☁️ Sauvegardé dans Supabase (table user_settings)
+          </div>
+        </div>
+
+        <div class="arrow">↓ ouvre l'app sur iPhone</div>
+
+        <div class="scene">
+          <div class="scene-label">📱 iPhone — même état automatiquement</div>
+          <div class="devices">
+            <div class="device">
+              <div class="device-label">💻 Mac <span class="synced">· synchronisé</span></div>
+              <div class="filterbar" style="padding:3px 5px;">
+                <span class="chip chip-hidden" style="font-size:8px;outline-color:#F97316;">Perso</span>
+              </div>
+            </div>
+            <div class="device">
+              <div class="device-label">📱 iPhone <span class="synced">· synchronisé</span></div>
+              <div class="filterbar" style="padding:3px 5px;">
+                <span class="chip chip-hidden" style="font-size:8px;outline-color:#F97316;">Perso</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scene">
+          <div class="scene-label">🗄️ Table Supabase</div>
+          <div style="font-family:monospace;font-size:9px;background:#1e293b;color:#7dd3fc;padding:8px;border-radius:6px;">
+            user_settings<br>
+            ├── user_id: "abc123"<br>
+            ├── hidden_categories: ["perso"]<br>
+            └── updated_at: "2025-05-07"
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="desc">
+      <p>Les catégories cachées sont stockées dans une table Supabase `user_settings` (JSON). Synchronisation automatique entre tous les appareils connectés au même compte.</p>
+      <p><span class="pro">✓</span> Synchronisé Mac / iPhone / autre<br>
+         <span class="pro">✓</span> Persiste même si cache vidé<br>
+         <span class="con">✗</span> Requête Supabase à chaque changement<br>
+         <span class="con">✗</span> Nécessite une migration de schéma DB</p>
+    </div>
+  </div>
+
+  <!-- ══ OPTION C : localStorage + clé par userId ═══════════════════ -->
+  <div class="option">
+    <div class="option-label">Option C</div>
+    <div class="option-title">localStorage par userId — meilleur des deux</div>
+    <div class="preview">
+      <div class="storage-badge storage-url">🔑 localStorage · clé par compte</div>
+      <div class="scenario">
+
+        <div class="scene">
+          <div class="scene-label">👤 Compte A — cache "Perso"</div>
+          <div class="filterbar">
+            <span class="chip chip-hidden" style="outline-color:#F97316;">Perso</span>
+            <span class="chip chip-normal">Ops</span>
+          </div>
+          <div style="font-family:monospace;font-size:8px;color:#64748b;margin-top:4px;">
+            hidden_cats_abc123 = ["perso"]
+          </div>
+        </div>
+
+        <div class="arrow">↓ déconnexion → Compte B</div>
+
+        <div class="scene">
+          <div class="scene-label">👤 Compte B — ses propres préférences</div>
+          <div class="filterbar">
+            <span class="chip chip-normal">Perso</span>
+            <span class="chip chip-hidden" style="outline-color:#3B82F6;">Ops</span>
+          </div>
+          <div style="font-family:monospace;font-size:8px;color:#64748b;margin-top:4px;">
+            hidden_cats_xyz789 = ["ops"]
+          </div>
+        </div>
+
+        <div class="scene">
+          <div class="scene-label">✓ Avantages combinés</div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div style="font-size:9px;color:#16a34a;">✓ Préférences isolées par compte</div>
+            <div style="font-size:9px;color:#16a34a;">✓ Zéro backend, instantané</div>
+            <div style="font-size:9px;color:#16a34a;">✓ Persiste entre sessions</div>
+            <div style="font-size:9px;color:#ef4444;">✗ Pas de sync multi-appareils</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="desc">
+      <p>Comme Option A, mais la clé localStorage inclut l'ID utilisateur : <code>hidden_cats_{userId}</code>. Chaque compte a ses propres préférences sur le même navigateur. Instantané, sans backend.</p>
+      <p><span class="pro">✓</span> Préférences par compte (multi-user safe)<br>
+         <span class="pro">✓</span> Instantané, aucune requête réseau<br>
+         <span class="pro">✓</span> 5 lignes de code<br>
+         <span class="con">✗</span> Toujours pas synchronisé entre appareils</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

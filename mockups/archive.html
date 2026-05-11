@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Feature 4 — Archive mockups</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; padding: 24px; }
+  h1 { font-size: 14px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .option { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
+  .option-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .1em; padding: 14px 16px 0; }
+  .option-title { font-size: 15px; font-weight: 700; color: #0f172a; padding: 4px 16px 12px; border-bottom: 1px solid #f1f5f9; }
+  .preview { padding: 16px; min-height: 360px; }
+
+  /* ── SHARED ── */
+  .app-header { background: #134E4A; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-radius: 10px 10px 0 0; }
+  .app-header-title { color: white; font-weight: 700; font-size: 13px; }
+  .app-header-right { display: flex; gap: 6px; align-items: center; }
+  .icon-btn { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; }
+  .board { display: flex; gap: 8px; background: #f8fafc; padding: 8px; border-radius: 0 0 10px 10px; border: 1px solid #e2e8f0; border-top: none; }
+  .col { flex: 1; min-width: 0; }
+  .col-header { background: white; border: 1px solid #e2e8f0; border-radius: 8px 8px 0 0; padding: 6px 8px; display: flex; align-items: center; justify-content: space-between; }
+  .col-title { font-size: 10px; font-weight: 700; color: #134E4A; }
+  .col-badge { font-size: 9px; font-weight: 600; background: #f1f5f9; color: #64748b; border-radius: 9999px; padding: 1px 5px; }
+  .col-body { background: #f8fafc; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px; padding: 5px; display: flex; flex-direction: column; gap: 4px; min-height: 60px; }
+  .task { background: white; border-radius: 6px; border: 1px solid #e2e8f0; padding: 5px 7px; font-size: 10px; font-weight: 600; color: #134E4A; }
+  .task-done { color: #94a3b8; text-decoration: line-through; }
+  .task-archived { color: #94a3b8; background: #f8fafc; border-style: dashed; font-style: italic; }
+  .divider { height: 1px; background: #e2e8f0; margin: 2px 0; position: relative; }
+  .divider-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #f8fafc; padding: 0 4px; font-size: 8px; font-weight: 600; color: #94a3b8; text-transform: uppercase; white-space: nowrap; }
+  .toggle-row { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 4px; cursor: pointer; }
+  .toggle-label { font-size: 9px; font-weight: 600; color: #64748b; }
+  .toggle-count { font-size: 9px; font-weight: 600; background: #f1f5f9; color: #64748b; border-radius: 9999px; padding: 1px 5px; }
+
+  /* ── OPTION A : Toggle dans la colonne "Terminé" ── */
+  .show-archive-btn { width: 100%; padding: 4px 6px; border: none; background: none; font-size: 9px; font-weight: 600; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; border-top: 1px dashed #e2e8f0; margin-top: 2px; }
+
+  /* ── OPTION B : Filtre dans le header ── */
+  .filter-bar { background: white; border-bottom: 1px solid #e2e8f0; padding: 4px 8px; display: flex; gap: 4px; align-items: center; border-radius: 0; }
+  .filter-chip { font-size: 9px; font-weight: 600; padding: 3px 7px; border-radius: 9999px; cursor: pointer; border: 1px solid transparent; }
+  .filter-chip-active { background: #134E4A; color: white; }
+  .filter-chip-inactive { background: #f1f5f9; color: #64748b; }
+  .filter-chip-archive { background: #f1f5f9; color: #64748b; border: 1px dashed #cbd5e1; }
+  .filter-chip-archive-active { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+  /* ── OPTION C : Page archive dédiée ── */
+  .archive-page { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 8px; }
+  .archive-page-header { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+  .archive-page-title { font-size: 11px; font-weight: 700; color: #92400e; }
+  .archive-page-back { font-size: 9px; color: #134E4A; font-weight: 600; cursor: pointer; margin-left: auto; }
+  .archive-task { background: white; border-radius: 6px; border: 1px solid #fde68a; padding: 5px 7px; font-size: 10px; color: #78716c; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
+  .archive-task-title { font-weight: 500; text-decoration: line-through; }
+  .archive-task-date { font-size: 8px; color: #a8a29e; }
+  .restore-btn { font-size: 8px; font-weight: 600; color: #134E4A; background: #f0fdf4; border: none; border-radius: 4px; padding: 2px 5px; cursor: pointer; }
+  .nav-icon { width: 26px; height: 26px; border-radius: 6px; background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; font-size: 11px; position: relative; }
+  .nav-icon-active { background: rgba(255,255,255,.3); }
+  .nav-badge { position: absolute; top: -3px; right: -3px; background: #f59e0b; color: white; font-size: 7px; font-weight: 700; border-radius: 9999px; min-width: 12px; height: 12px; display: flex; align-items: center; justify-content: center; padding: 0 2px; }
+
+  /* descriptions */
+  .desc { padding: 12px 16px; border-top: 1px solid #f1f5f9; }
+  .desc p { font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 6px; }
+  .pro { color: #16a34a; font-weight: 600; }
+  .con { color: #dc2626; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Feature 4 — Visibilité de l'archive · 3 propositions</h1>
+<div class="grid">
+
+  <!-- ══ OPTION A : Toggle dans la colonne Terminé ══════════════════ -->
+  <div class="option">
+    <div class="option-label">Option A</div>
+    <div class="option-title">Toggle "Voir l'archive" dans la colonne</div>
+    <div class="preview">
+      <div class="app-header"><span class="app-header-title">📋 Kanban</span></div>
+      <div class="board">
+        <div class="col">
+          <div class="col-header"><span class="col-title">À faire</span><span class="col-badge">3</span></div>
+          <div class="col-body">
+            <div class="task">Appel client</div>
+            <div class="task">Rapport Q2</div>
+            <div class="task">Réunion équipe</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="col-header"><span class="col-title">En cours</span><span class="col-badge">1</span></div>
+          <div class="col-body">
+            <div class="task">Refonte site</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="col-header" style="border-radius:8px 8px 0 0;">
+            <span class="col-title">Terminé</span>
+            <span class="col-badge">2</span>
+          </div>
+          <div class="col-body">
+            <div class="task task-done">Setup CI/CD</div>
+            <div class="task task-done">Onboarding</div>
+            <!-- Divider -->
+            <div style="position:relative; margin: 2px 0;">
+              <div style="height:1px; background:#e2e8f0;"></div>
+              <span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#f8fafc;padding:0 4px;font-size:8px;font-weight:700;color:#94a3b8;white-space:nowrap;">ARCHIVE · 12</span>
+            </div>
+            <!-- Archived tasks (shown) -->
+            <div class="task task-archived">Migration BDD</div>
+            <div class="task task-archived">Fix auth bug</div>
+            <div class="task task-archived">Deploy v2.1</div>
+            <!-- Toggle -->
+            <button class="show-archive-btn">
+              <span>▲</span> Masquer l'archive
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <p>Un bouton "Voir l'archive (12)" en bas de la colonne "Terminé" permet de révéler les tâches archivées (> 15 jours). Un séparateur visuel distingue les tâches récentes des archivées. Cliquer à nouveau masque l'archive.</p>
+      <p><span class="pro">✓</span> Contextuellement logique (archive = terminé)<br>
+         <span class="pro">✓</span> Accès direct sans changer de vue<br>
+         <span class="pro">✓</span> Simple à implémenter<br>
+         <span class="con">✗</span> Sur mobile, la colonne "Terminé" est un onglet séparé</p>
+    </div>
+  </div>
+
+  <!-- ══ OPTION B : Chip "Archive" dans la FilterBar ════════════════ -->
+  <div class="option">
+    <div class="option-label">Option B</div>
+    <div class="option-title">Chip "Archive" dans la barre de filtres</div>
+    <div class="preview">
+      <div class="app-header"><span class="app-header-title">📋 Kanban</span></div>
+      <!-- FilterBar avec chip Archive -->
+      <div class="filter-bar">
+        <span class="filter-chip filter-chip-inactive">Tous</span>
+        <span class="filter-chip filter-chip-inactive">Ops</span>
+        <span class="filter-chip filter-chip-inactive">IA</span>
+        <span class="filter-chip filter-chip-archive-active">🗂 Archive</span>
+      </div>
+      <!-- Board en mode archive -->
+      <div class="board" style="margin-top:0; border-top:none; border-radius:0 0 10px 10px;">
+        <div class="col">
+          <div class="col-header" style="background:#fffbeb; border-color:#fde68a;">
+            <span class="col-title" style="color:#92400e;">🗂 Archive — Terminé</span>
+            <span class="col-badge" style="background:#fef3c7;color:#92400e;">12</span>
+          </div>
+          <div class="col-body" style="background:#fffbeb; border-color:#fde68a;">
+            <div class="archive-task" style="margin:0 0 3px 0; border-radius:5px; border:1px solid #fde68a;">
+              <div>
+                <div class="archive-task-title" style="font-size:10px;font-weight:600;color:#78716c;">Migration BDD</div>
+                <div class="archive-task-date">Terminé il y a 23 jours</div>
+              </div>
+              <button class="restore-btn">↩ Restaurer</button>
+            </div>
+            <div class="archive-task" style="margin:0 0 3px 0; border-radius:5px; border:1px solid #fde68a;">
+              <div>
+                <div class="archive-task-title" style="font-size:10px;font-weight:600;color:#78716c;">Fix auth bug</div>
+                <div class="archive-task-date">Terminé il y a 18 jours</div>
+              </div>
+              <button class="restore-btn">↩ Restaurer</button>
+            </div>
+            <div class="archive-task" style="margin:0; border-radius:5px; border:1px solid #fde68a;">
+              <div>
+                <div class="archive-task-title" style="font-size:10px;font-weight:600;color:#78716c;">Deploy v2.1</div>
+                <div class="archive-task-date">Terminé il y a 31 jours</div>
+              </div>
+              <button class="restore-btn">↩ Restaurer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <p>Un chip "🗂 Archive" s'ajoute dans la barre de filtres existante. Quand actif, le board affiche uniquement les tâches archivées dans une vue dédiée avec teinte ambrée, et un bouton "Restaurer" sur chaque tâche pour la remettre en "À faire".</p>
+      <p><span class="pro">✓</span> S'intègre dans l'UI existante sans friction<br>
+         <span class="pro">✓</span> Vue claire et dédiée<br>
+         <span class="pro">✓</span> Restauration possible directement<br>
+         <span class="pro">✓</span> Mobile et desktop : même expérience</p>
+    </div>
+  </div>
+
+  <!-- ══ OPTION C : Icône archive dans le header ════════════════════ -->
+  <div class="option">
+    <div class="option-label">Option C</div>
+    <div class="option-title">Icône archive dans le header</div>
+    <div class="preview">
+      <div class="app-header">
+        <span class="app-header-title">📋 Kanban</span>
+        <div class="app-header-right">
+          <div class="icon-btn">🔍</div>
+          <div class="icon-btn">🔔</div>
+          <div class="nav-icon nav-icon-active">
+            🗂
+            <span class="nav-badge">12</span>
+          </div>
+        </div>
+      </div>
+      <!-- Archive page overlay -->
+      <div class="archive-page" style="margin-top:6px;">
+        <div class="archive-page-header">
+          <span style="font-size:14px;">🗂</span>
+          <span class="archive-page-title">Archive · 12 tâches</span>
+          <span class="archive-page-back">← Retour au board</span>
+        </div>
+        <div class="archive-task">
+          <div>
+            <div class="archive-task-title">Migration BDD</div>
+            <div class="archive-task-date">Terminé le 14 avr. 2025 · Ops</div>
+          </div>
+          <button class="restore-btn">↩ Restaurer</button>
+        </div>
+        <div class="archive-task">
+          <div>
+            <div class="archive-task-title">Fix auth bug</div>
+            <div class="archive-task-date">Terminé le 19 avr. 2025 · IA</div>
+          </div>
+          <button class="restore-btn">↩ Restaurer</button>
+        </div>
+        <div class="archive-task">
+          <div>
+            <div class="archive-task-title">Deploy v2.1</div>
+            <div class="archive-task-date">Terminé le 6 avr. 2025 · Head of</div>
+          </div>
+          <button class="restore-btn">↩ Restaurer</button>
+        </div>
+        <div style="text-align:center; padding-top:6px; font-size:9px; color:#a8a29e;">+ 9 tâches plus anciennes…</div>
+      </div>
+    </div>
+    <div class="desc">
+      <p>Une icône 🗂 dans le header (avec badge de compteur) remplace le board par une vue archive complète. Chaque tâche affiche sa date de complétion et sa catégorie. Bouton "← Retour" pour revenir au board.</p>
+      <p><span class="pro">✓</span> Vue riche avec métadonnées (date, catégorie)<br>
+         <span class="pro">✓</span> Toujours accessible depuis le header<br>
+         <span class="con">✗</span> Quitte le board (changement de contexte)<br>
+         <span class="con">✗</span> Plus complexe à implémenter</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -13,6 +13,8 @@ interface Props {
   allStatuses: Column[]
   isHidden?: boolean
   searchQuery?: string
+  overdueFilter?: boolean
+  overdueTaskIds?: Set<string>
 }
 
 export default function CategorySection({
@@ -27,6 +29,8 @@ export default function CategorySection({
   allStatuses,
   isHidden,
   searchQuery,
+  overdueFilter,
+  overdueTaskIds,
 }: Props) {
   // Couleur avec opacité légère pour le fond du header
   const hexToRgba = (hex: string, alpha: number) => {
@@ -71,6 +75,7 @@ export default function CategorySection({
           allStatuses={allStatuses}
           isHidden={isHidden}
           searchQuery={searchQuery}
+          isOverdueDimmed={overdueFilter && !overdueTaskIds?.has(task.id)}
         />
       ))}
     </div>

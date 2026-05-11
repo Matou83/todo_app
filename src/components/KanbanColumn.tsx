@@ -16,6 +16,8 @@ interface Props {
   allStatuses: Column[]
   hiddenCategories: Set<string>
   searchQuery?: string
+  overdueFilter?: boolean
+  overdueTaskIds?: Set<string>
 }
 
 const COLUMN_STYLE: Record<Status, {
@@ -55,6 +57,7 @@ const COLUMN_STYLE: Record<Status, {
 export default function KanbanColumn({
   column, tasks, categories, activeFilter, hiddenCategories, searchQuery,
   onAddTask, onMoveTask, onDeleteTask, onEditTask, onUpdateDescription, allStatuses,
+  overdueFilter, overdueTaskIds,
 }: Props) {
   const style = COLUMN_STYLE[column.id]
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
@@ -88,8 +91,10 @@ export default function KanbanColumn({
     }
   }
 
+  const isDoneDimmed = overdueFilter && column.id === 'done'
+
   return (
-    <div className="flex flex-col w-full sm:flex-1 sm:min-w-0 animate-slide-up">
+    <div className={`flex flex-col w-full sm:flex-1 sm:min-w-0 animate-slide-up transition-opacity duration-200 ${isDoneDimmed ? 'opacity-35 pointer-events-none' : ''}`}>
       <div
           ref={setNodeRef}
           className={`rounded-2xl overflow-hidden flex flex-col flex-1 ${style.wrapper} shadow-sm transition-all duration-150 ${isOver ? 'ring-2 ring-teal-400 ring-offset-2' : ''}`}
@@ -145,6 +150,8 @@ export default function KanbanColumn({
                 allStatuses={allStatuses}
                 isHidden={hiddenCategories.has(category.id)}
                 searchQuery={searchQuery}
+                overdueFilter={overdueFilter}
+                overdueTaskIds={overdueTaskIds}
               />
             ))
           )}
