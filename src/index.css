@@ -6,6 +6,7 @@
   --animate-fade-in: fadeIn 0.2s ease-out;
   --animate-slide-up: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-scale-in: scaleIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-complete: completeTask 0.4s ease-out forwards;
 }
 
 @keyframes fadeIn {
@@ -31,6 +32,12 @@
 @keyframes slideUpFade {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes completeTask {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(0.97); background-color: #ecfdf5; }
+  100% { opacity: 0; transform: scale(0.95) translateX(20px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
