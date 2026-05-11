@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import confetti from 'canvas-confetti'
 import { createPortal } from 'react-dom'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -72,6 +73,10 @@ export default function App() {
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set())
   const [showArchive, setShowArchive] = useState(false)
   const [showOverdue, setShowOverdue] = useState(false)
+  const [streakCount, setStreakCount] = useState(0)
+  const [streakToast, setStreakToast] = useState<string | null>(null)
+  const streakToastTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const columnRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   function hiddenCatsKey(userId: string) { return `hidden_cats_${userId}` }
 
@@ -175,6 +180,20 @@ export default function App() {
     setShowOverdue(v => !v)
     setActiveFilter(null)
     setShowArchive(false)
+  }
+
+  const STREAK_MESSAGES: Record<number, string> = {
+    3: '🔥 3 d\'affilée !',
+    5: '⚡ 5 tâches ! Tu gères !',
+    10: '🏆 10 d\'affilée ! Légendaire.',
+  }
+
+  function showStreakToast(count: number) {
+    const msg = STREAK_MESSAGES[count]
+    if (!msg) return
+    if (streakToastTimeout.current) clearTimeout(streakToastTimeout.current)
+    setStreakToast(msg)
+    streakToastTimeout.current = setTimeout(() => setStreakToast(null), 2300)
   }
 
   useEffect(() => {
@@ -299,11 +318,43 @@ export default function App() {
   }
 
   async function moveTask(id: string, status: Status) {
+    const task = tasks.find(t => t.id === id)
     const completed_at = status === 'done' ? new Date().toISOString() : null
     const { error } = await supabase.from('tasks').update({ status, completed_at }).eq('id', id)
-    if (!error) setTasks(prev => prev.map(t => t.id === id
-      ? { ...t, status, completedAt: completed_at ? new Date(completed_at).getTime() : undefined }
-      : t))
+    if (!error) {
+      setTasks(prev => prev.map(t => t.id === id
+        ? { ...t, status, completedAt: completed_at ? new Date(completed_at).getTime() : undefined }
+        : t))
+
+      if (status === 'done' && task) {
+        const newStreak = streakCount + 1
+        setStreakCount(newStreak)
+        showStreakToast(newStreak)
+
+        const sourceStatus = task.status
+        if (sourceStatus !== 'done') {
+          const remaining = envTasks.filter(t => t.status === sourceStatus && t.id !== id)
+          const visibleRemaining = activeFilter ? remaining.filter(t => t.categoryId === activeFilter) : remaining
+          if (visibleRemaining.length === 0) {
+            const colEl = columnRefs.current[sourceStatus]
+            if (colEl) {
+              const rect = colEl.getBoundingClientRect()
+              confetti({
+                particleCount: 50,
+                spread: 60,
+                origin: {
+                  x: (rect.left + rect.width / 2) / window.innerWidth,
+                  y: (rect.top + 60) / window.innerHeight,
+                },
+                colors: ['#10b981', '#14b8a6', '#0d9488', '#fbbf24', '#f97316'],
+                decay: 0.9,
+                gravity: 1.2,
+              })
+            }
+          }
+        }
+      }
+    }
   }
 
   async function updateTaskDescription(id: string, description: string) {
@@ -828,38 +879,16 @@ export default function App() {
           </div>
           {/* Active column */}
           <main ref={swipeRef} className="p-4">
-            <KanbanColumn
-              column={COLUMNS.find(c => c.id === activeTab)!}
-              tasks={envTasks.filter(t => t.status === activeTab)}
-              categories={envCategories}
-              activeFilter={activeFilter}
-              onAddTask={() => setModal({ open: true, status: activeTab })}
-              onMoveTask={moveTask}
-              onDeleteTask={deleteTask}
-              onEditTask={(id) => setModal({ open: true, status: tasks.find(t => t.id === id)?.status ?? activeTab, editId: id })}
-              onUpdateDescription={updateTaskDescription}
-              allStatuses={COLUMNS}
-              hiddenCategories={hiddenCategories}
-              searchQuery={searchQuery}
-              overdueFilter={showOverdue}
-              overdueTaskIds={overdueTaskIds}
-            />
-          </main>
-        </>
-      ) : (
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <main className="p-6 flex gap-5 overflow-x-auto min-h-[calc(100vh-121px)] items-start">
-            {COLUMNS.map(col => (
+            <div ref={el => { columnRefs.current[activeTab] = el }}>
               <KanbanColumn
-                key={col.id}
-                column={col}
-                tasks={envTasks.filter(t => t.status === col.id)}
+                column={COLUMNS.find(c => c.id === activeTab)!}
+                tasks={envTasks.filter(t => t.status === activeTab)}
                 categories={envCategories}
                 activeFilter={activeFilter}
-                onAddTask={() => setModal({ open: true, status: col.id })}
+                onAddTask={() => setModal({ open: true, status: activeTab })}
                 onMoveTask={moveTask}
                 onDeleteTask={deleteTask}
-                onEditTask={(id) => setModal({ open: true, status: tasks.find(t => t.id === id)?.status ?? col.id, editId: id })}
+                onEditTask={(id) => setModal({ open: true, status: tasks.find(t => t.id === id)?.status ?? activeTab, editId: id })}
                 onUpdateDescription={updateTaskDescription}
                 allStatuses={COLUMNS}
                 hiddenCategories={hiddenCategories}
@@ -867,6 +896,31 @@ export default function App() {
                 overdueFilter={showOverdue}
                 overdueTaskIds={overdueTaskIds}
               />
+            </div>
+          </main>
+        </>
+      ) : (
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <main className="p-6 flex gap-5 overflow-x-auto min-h-[calc(100vh-121px)] items-start">
+            {COLUMNS.map(col => (
+              <div key={col.id} ref={el => { columnRefs.current[col.id] = el }} className="flex-1 min-w-0 flex flex-col">
+                <KanbanColumn
+                  column={col}
+                  tasks={envTasks.filter(t => t.status === col.id)}
+                  categories={envCategories}
+                  activeFilter={activeFilter}
+                  onAddTask={() => setModal({ open: true, status: col.id })}
+                  onMoveTask={moveTask}
+                  onDeleteTask={deleteTask}
+                  onEditTask={(id) => setModal({ open: true, status: tasks.find(t => t.id === id)?.status ?? col.id, editId: id })}
+                  onUpdateDescription={updateTaskDescription}
+                  allStatuses={COLUMNS}
+                  hiddenCategories={hiddenCategories}
+                  searchQuery={searchQuery}
+                  overdueFilter={showOverdue}
+                  overdueTaskIds={overdueTaskIds}
+                />
+              </div>
             ))}
           </main>
           <DragOverlay>
@@ -916,6 +970,19 @@ export default function App() {
               />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Streak toast */}
+      {streakToast && (
+        <div
+          key={streakToast}
+          className={`fixed left-1/2 z-50 bg-slate-800 text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-bold ${pendingDelete ? 'bottom-20' : 'bottom-5'}`}
+          style={{ animation: 'toastIn 0.3s ease-out, toastOut 0.3s ease-in 2s forwards' }}
+          role="status"
+          aria-live="polite"
+        >
+          {streakToast}
         </div>
       )}
 
