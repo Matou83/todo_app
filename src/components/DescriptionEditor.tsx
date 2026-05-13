@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
+import Link from '@tiptap/extension-link'
 
 function refreshCheckedStyles(dom: Element) {
   dom.querySelectorAll('li[data-checked]').forEach(li => {
@@ -24,6 +25,16 @@ export default function DescriptionEditor({ value, onChange, placeholder = 'Desc
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: false, blockquote: false, codeBlock: false, code: false, horizontalRule: false }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+        HTMLAttributes: {
+          class: 'tiptap-link',
+          rel: 'noopener noreferrer',
+          target: '_blank',
+        },
+      }),
       TaskList,
       TaskItem.configure({
         nested: false,
@@ -79,10 +90,40 @@ export default function DescriptionEditor({ value, onChange, placeholder = 'Desc
     }
   }, [value]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [showLinkInput, setShowLinkInput] = useState(false)
+  const [linkUrl, setLinkUrl] = useState('')
+
+  const openLinkPopup = useCallback(() => {
+    if (!editor) return
+    const existing = editor.getAttributes('link').href ?? ''
+    setLinkUrl(existing)
+    setShowLinkInput(true)
+  }, [editor])
+
+  const applyLink = useCallback(() => {
+    if (!editor) return
+    const url = linkUrl.trim()
+    if (!url) {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run()
+    } else {
+      editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+    }
+    setShowLinkInput(false)
+    setLinkUrl('')
+  }, [editor, linkUrl])
+
+  const removeLink = useCallback(() => {
+    if (!editor) return
+    editor.chain().focus().extendMarkRange('link').unsetLink().run()
+    setShowLinkInput(false)
+    setLinkUrl('')
+  }, [editor])
+
   if (!editor) return null
 
   const isTaskList = editor.isActive('taskList')
   const isBulletList = editor.isActive('bulletList')
+  const isLink = editor.isActive('link')
 
   return (
     <div className="border border-slate-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-teal-400 focus-within:border-transparent transition-shadow">
@@ -117,6 +158,19 @@ export default function DescriptionEditor({ value, onChange, placeholder = 'Desc
           Puce
         </button>
 
+        <button
+          type="button"
+          onMouseDown={e => { e.preventDefault(); openLinkPopup() }}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${isLink ? 'bg-teal-100 text-teal-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}`}
+          title="Ajouter un lien"
+        >
+          <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <path d="M6.5 9.5a3.5 3.5 0 0 0 5 0l2-2a3.5 3.5 0 0 0-5-5l-1 1" />
+            <path d="M9.5 6.5a3.5 3.5 0 0 0-5 0l-2 2a3.5 3.5 0 0 0 5 5l1-1" />
+          </svg>
+          Lien
+        </button>
+
         {(isTaskList || isBulletList) && (
           <button
             type="button"
@@ -132,6 +186,44 @@ export default function DescriptionEditor({ value, onChange, placeholder = 'Desc
           </button>
         )}
       </div>
+
+      {/* Link input popup */}
+      {showLinkInput && (
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 bg-slate-50/80">
+          <svg className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <path d="M6.5 9.5a3.5 3.5 0 0 0 5 0l2-2a3.5 3.5 0 0 0-5-5l-1 1" />
+            <path d="M9.5 6.5a3.5 3.5 0 0 0-5 0l-2 2a3.5 3.5 0 0 0 5 5l1-1" />
+          </svg>
+          <input
+            type="url"
+            value={linkUrl}
+            onChange={e => setLinkUrl(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') { e.preventDefault(); applyLink() }
+              if (e.key === 'Escape') { setShowLinkInput(false); setLinkUrl('') }
+            }}
+            placeholder="https://exemple.com"
+            className="flex-1 text-xs text-slate-700 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-teal-400 focus:border-teal-400"
+            autoFocus
+          />
+          <button
+            type="button"
+            onClick={applyLink}
+            className="px-2.5 py-1.5 text-xs font-semibold text-white bg-teal-500 hover:bg-teal-600 rounded-lg transition-colors cursor-pointer"
+          >
+            OK
+          </button>
+          {isLink && (
+            <button
+              type="button"
+              onClick={removeLink}
+              className="px-2.5 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+            >
+              Supprimer
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Editor area */}
       <div className="px-3.5 py-2.5 relative">

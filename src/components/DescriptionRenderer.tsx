@@ -68,13 +68,33 @@ function renderNode(node: ChildNode, idx: number, onToggle: ((index: number) => 
     )
   }
 
-  if (el.tagName === 'P') {
-    const text = el.textContent ?? ''
-    if (!text.trim()) return null
-    return <p key={idx} className="text-xs text-slate-500 leading-relaxed">{text}</p>
+  if (el.tagName === 'A') {
+    const href = el.getAttribute('href') ?? ''
+    return (
+      <a
+        key={idx}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={e => e.stopPropagation()}
+        className="text-teal-600 hover:text-teal-700 underline underline-offset-2 break-all"
+      >
+        {Array.from(el.childNodes).map((child, i) => renderNode(child, i, onToggle, checkboxIndex))}
+      </a>
+    )
   }
 
-  // fallback: render text content
+  if (el.tagName === 'P') {
+    return (
+      <p key={idx} className="text-xs text-slate-500 leading-relaxed">
+        {Array.from(el.childNodes).map((child, i) => renderNode(child, i, onToggle, checkboxIndex))}
+      </p>
+    )
+  }
+
+  // fallback: render children or text
+  const children = Array.from(el.childNodes).map((child, i) => renderNode(child, i, onToggle, checkboxIndex)).filter(Boolean)
+  if (children.length > 0) return <span key={idx} className="text-xs text-slate-500">{children}</span>
   const text = el.textContent ?? ''
   if (!text.trim()) return null
   return <span key={idx} className="text-xs text-slate-500">{text}</span>

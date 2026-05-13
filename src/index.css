@@ -108,5 +108,16 @@
   content: ''; width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; flex-shrink: 0; margin-top: 6px;
 }
 
+/* Links */
+.tiptap-editor a,
+.tiptap-editor a.tiptap-link {
+  color: #0d9488;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  word-break: break-all;
+}
+.tiptap-editor a:hover { color: #0f766e; }
+
 /* Placeholder cursor */
 .tiptap-editor.ProseMirror-focused { outline: none; }
